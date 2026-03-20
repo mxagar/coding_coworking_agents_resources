@@ -2,6 +2,17 @@
 
 This project contains resources related to coding and co-working agents.
 
+- [Coding and Co-Working Agents: Guides and Resources](#coding-and-co-working-agents-guides-and-resources)
+  - [Codex CLI](#codex-cli)
+    - [Resources](#resources)
+    - [Setup](#setup)
+    - [Basic Usage](#basic-usage)
+    - [Other Command Line Options](#other-command-line-options)
+    - [Other Subcommands](#other-subcommands)
+    - [Slash Commands](#slash-commands)
+    - [Features](#features)
+
+
 ## Codex CLI
 
 ### Resources
@@ -9,7 +20,7 @@ This project contains resources related to coding and co-working agents.
 - [https://developers.openai.com/codex/cli](https://developers.openai.com/codex/cli)
 - ...
 
-## Setup
+### Setup
 
 ```bash
 # Install via npm
@@ -35,11 +46,14 @@ Key ideas:
 - `codex` can interact with the computer via bash/cli.
 - We can have interactive and non-interactive sessions, and every session can be left and resumed (state & history are saved). 
 - Interactive sessions are started with `codex`.
+- The input field of the interactive session is called *composer*.
 - In an interactive session, we have the *slash commands*: `/status`.
 - Non-interactive sessions are started with `codex exec ...`.
 - Each conversation is a sessions; session history is usually saved in `~/.codex/`
+- The default configuration is in `~/.codex/config.toml`; diffs or changes are saved in the project dir under `.codex/config.toml`.
 - If we configure a session in a dir in a different way than the default, the configuration is saved in that directory under `.codex/`.
 - TUI = Terminal UI, interactive CLI with menus, etc.
+- IMPORTANT: before running `codex` we should set our environment, so that Codex doesn't waste tokens setting it up; e.g.: `conda activate my_env`, etc.
 
 ```bash
 # Start with initial prompt
@@ -61,9 +75,11 @@ codex resume --all  # complete history beyond current dir
 codex resume --last
 codex resume <sessions_id>
 
-# Codex arguments
+# Codex Command Line Options
 codex --model gpt-5.4
-codex --cd "/path/to/dir". # override current dir
+codex --cd /path/to/dir  # override current dir
+codex --add-dir /path/to/dir  # expose more writeable roots
+codex --cd apps/frontend --add-dir ../backend --add-dir ../shared
 codex help  # see all args/options, subcommands, etc.
 codex <subcommmand> help  # 
 
@@ -94,11 +110,40 @@ codex ...
 Ctrl + G
 # vim opens: we write, ESC :wq
 # prompt appears in interactive session
+
+# Insie a session...
+!ls  # ! to run shell commands
+@filename  # run a fuzzy search, use TAB / ENTER, refer to a filename
+ENTER  # Inject new instructions while Codex is running
+TAB  # Follow up prompt while Codex is running
+ESC x2  # Edit previous message
+```
+
+### Other Command Line Options
+
+```bash
+--ask-for-approval untrusted | on-request | never  # Should codex ask for human approval?
+--dangerously-bypass-approvals-and-sandbox  # Run everything without approvals or sandboxing; only for external hardened envs!
+--yolo  # Same as before
+--oss  # Use local Ollama model!
+--profile  # Load specific profile from ~/.codex/config.toml
+--sandbox read-only | workspace-write | danger-full-access  # Select the sandbox policy for model-generated shell commands
+--search  # Enable live web search (sets web_search = "live" instead of the default "cached"); should be enabled by default?
+```
+
+### Other Subcommands
+
+```bash
+codex app  # Launch the Codex desktop app on macOS
+codex fork  # Fork a previous interactive session into a new thread
+codex mcp  # Manage Model Context Protocol servers: codex mcp list, add, remove, authenticate
+codex mcp-server  # Run Codex itself as an MCP server over stdio. Useful when another agent consumes Codex
+codex sandbox  # Run arbitrary commands inside Codex-provided macOS seatbelt or Linux sandboxes
 ```
 
 ### Slash Commands
 
-We run *slash commands* in an interactive session.
+We run *slash commands* in an interactive session, entering them into the *composer* (i.e., the input field).
 
 ```bash
 # Change model + reasoning level
