@@ -10,7 +10,8 @@ This project contains resources related to coding and co-working agents.
     - [Other Command Line Options](#other-command-line-options)
     - [Other Subcommands](#other-subcommands)
     - [Slash Commands](#slash-commands)
-    - [Features](#features)
+    - [Features and Configuration](#features-and-configuration)
+    - [AGENTS.md](#agentsmd)
 
 
 ## Codex CLI
@@ -244,7 +245,7 @@ We run *slash commands* in an interactive session, entering them into the *compo
 /approvals  # still works, but no longer appears in the slash popup
 ```
 
-### Features
+### Features and Configuration
 
 We can enable/disable features; the changes are automatically saved to `~/.codex/config.toml`.
 
@@ -261,4 +262,96 @@ child_agents_md                  under development  false
 # Set feature flags
 codex features enable unified_exec
 codex features disable shell_snapshot
+```
+
+If we change anything, the diff or user settings are saved into  `.codex/config.toml`.
+
+Common configuration settings; we can define them
+
+- in `config.toml`
+- or in the codex call: `codex -c log_dir=./.codex-log`, `codex --config log_dir=./.codex-log`; the CLI call overrides the `config.toml`
+
+```conf
+model = "gpt-5.4"
+approval_policy = "on-request"  # Control when Codex pauses to ask before running generated commands
+sandbox_mode = "workspace-write"  # Adjust how much filesystem and network access Codex has while executing commands
+web_search = "cached"  # default; serves results from the web search cache
+web_search = "live"  # fetch the most recent data from the web (same as --search)
+web_search = "disabled"
+model_reasoning_effort = "high"
+personality = "friendly" # or "pragmatic" or "none"
+log_dir = "/absolute/path/to/codex-logs"  # Override where Codex writes local log files such as codex-tui.log
+
+[shell_environment_policy]  # Control which environment variables Codex forwards to spawned commands
+include_only = ["PATH", "HOME"]
+
+[features]
+shell_snapshot = true  # Speed up repeated commands
+```
+
+We can define profiles in the `config.toml` and then use them in the codex call: `codex --profile <name>`.
+
+```conf
+model = "gpt-5-codex"
+approval_policy = "on-request"
+model_catalog_json = "/Users/me/.codex/model-catalogs/default.json"
+
+[profiles.deep-review]
+model = "gpt-5-pro"
+model_reasoning_effort = "high"
+approval_policy = "never"
+model_catalog_json = "/Users/me/.codex/model-catalogs/deep-review.json"
+
+[profiles.lightweight]
+model = "gpt-4.1"
+approval_policy = "untrusted"
+```
+
+We can define custom model providers, too:
+
+```conf
+model = "gpt-5.1"
+model_provider = "proxy"
+
+[model_providers.proxy]
+name = "OpenAI using LLM proxy"
+base_url = "http://proxy.example.com"
+env_key = "OPENAI_API_KEY"
+
+[model_providers.ollama]
+name = "Ollama"
+base_url = "http://localhost:11434/v1"
+
+[model_providers.mistral]
+name = "Mistral"
+base_url = "https://api.mistral.ai/v1"
+env_key = "MISTRAL_API_KEY"
+```
+
+An easier way of using local models i `--oss`:
+
+```conf
+# Default local provider used with `--oss`
+oss_provider = "ollama" # or "lmstudio"
+```
+
+We can control the shell environment variables passed to subprocesses:
+
+```conf
+[shell_environment_policy]
+inherit = "none"
+set = { PATH = "/usr/bin", MY_FLAG = "1" }
+ignore_default_excludes = false
+exclude = ["AWS_*", "AZURE_*"]
+include_only = ["PATH", "HOME"]
+```
+
+### AGENTS.md
+
+We can create persistent agent definitions:
+
+```bash
+mkdir -p ~/.codex
+touch ~/.codex/AGENTS.md
+# we write the content
 ```
