@@ -12,6 +12,8 @@ This project contains resources related to coding and co-working agents.
     - [Slash Commands](#slash-commands)
     - [Features and Configuration](#features-and-configuration)
     - [AGENTS.md](#agentsmd)
+    - [SKILL.md](#skillmd)
+    - [Subagents](#subagents)
 
 
 ## Codex CLI
@@ -355,3 +357,87 @@ mkdir -p ~/.codex
 touch ~/.codex/AGENTS.md
 # we write the content
 ```
+
+### SKILL.md
+
+We can use the built-in skill creator:
+
+```bash
+$skill-creator
+```
+
+Creator asks:
+
+- What the skill does
+- When it should trigger
+- and whether it should stay instruction-only or include scripts.
+
+We can also create a `SKILL.md` manually:
+
+```bash
+---
+name: skill-name
+description: Explain exactly when this skill should and should not trigger.
+---
+
+Skill instructions for Codex to follow.
+```
+
+We can save skills in several places:
+
+- Repo scope
+  - `$CWD/.agents/skills`
+  - `$CWD/../.agents/skills`
+  - `$REPO_ROOT/.agents/skills`
+- User scope
+  - `$HOME/.agents/skills`
+
+We can also **install** skills:
+
+```bash
+$skill-installer linear
+```
+
+We can enable/disable given skills in the `~/.codex/config.toml`:
+
+```conf
+[[skills.config]]
+path = "/path/to/skill/SKILL.md"
+enabled = false
+```
+
+### Subagents
+
+Codex can orchestrate the launch and management of several sub-agents in parallel, each specialized in specific themes.
+
+There are default sub-agents, and we can define custom ones, too.
+
+Be careful with context pollution; check: [Subagents](https://developers.openai.com/codex/concepts/subagents).
+
+Sub-agents are spawned only when we explicitly request it. They inherit the general settings.
+
+Example prompt to trigger agents:
+
+```text
+I would like to review the following points on the current PR (this branch vs main). Spawn one agent per point, wait for all of them, and summarize the result for each point.
+1. Security issue
+2. Code quality
+3. Bugs
+4. Race
+5. Test flakiness
+6. Maintainability of the code
+```
+
+Then, we use `/agent` to switch between agents.
+
+We can ask Codex to stop the agents with natural language.
+
+Default subagents:
+
+- default: general-purpose fallback agent.
+- worker: execution-focused agent for implementation and fixes.
+- explorer: read-heavy codebase exploration agent.
+
+To define custom agents:
+
+- 
