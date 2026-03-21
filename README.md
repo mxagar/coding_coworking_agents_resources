@@ -146,23 +146,102 @@ codex sandbox  # Run arbitrary commands inside Codex-provided macOS seatbelt or 
 We run *slash commands* in an interactive session, entering them into the *composer* (i.e., the input field).
 
 ```bash
-# Change model + reasoning level
-/model
+# Set what Codex can do without asking first
+/permissions  # change approval mode mid-session, opens permission picker
 
-# Select permissions
-/approvals
-# default = RW in current dir
-# full access
+# Grant sandbox read access to an extra directory outside of current dir
+/sandbox-add-read-dir  # Windows only
+# Example: /sandbox-add-read-dir C:\projects\shared-docs
 
-# Start fresh chat
-/clear
+# Switch the active agent thread
+# Lets you inspect or continue work in another spawned agent thread
+/agent
 
-# Copy last codex output
+# Browse apps/connectors and insert them into your prompt: opens app picker
+/apps  # attach an app as $app-slug
+
+# Clear the terminal and start a fresh chat
+/clear  # unlike Ctrl+L, this also resets the conversation
+
+# Summarize the visible conversation to free tokens, more context
+/compact
+
+# Copy the latest completed Codex output to clipboard
 /copy
 
-# Review local code: A dedicated agent for reviewing starts:
-# review a branch, staged/uncommitted, a commit, custom 
+# Show the Git diff, including untracked files, before committing/testing
+/diff
+
+# Exit the CLI
+/exit  # same as /quit
+
+# Toggle experimental features: toggle UI is opened
+/experimental
+
+# Send logs to the Codex maintainers: report bugs, issues
+/feedback
+
+# Generate an AGENTS.md scaffold/starter in the current directory
+/init
+
+# Sign out of Codex
+/logout
+
+# List configured/available MCP tools
+/mcp
+
+# Attach a file or folder to the conversation, for explicit inspection
+/mention
+# Example: /mention src/app.ts
+
+# Choose the active model: model picker + reasoning level
+/model  # may also include reasoning effort when available
+
+# Toggle Fast mode on/off for GPT-5.4
+/fast  # supports on, off, and status
+# Example: /fast on
+
+# Switch to plan mode
+/plan  # can include an inline prompt
+# Example: /plan Propose a migration plan for this service
+
+# Choose a communication style for responses: personality picker opens
+/personality  # docs list friendly, pragmatic, and none
+
+# Show experimental background terminals and recent output
+# Lists background terminals and their recent output when long-running commands are active
+/ps
+
+# Fork the current conversation into a new thread
+/fork
+
+# Resume a saved conversation: session list opens
+/resume
+
+# Start a new conversation in the same CLI session
+# Resets chat context without leaving the current repository session
+/new
+
+# Exit the CLI
+/quit
+
+# Ask Codex to review your working tree
+# Starts a code review pass over your current local changes
 /review
+
+# Display session configuration and token usage
+# Prints the active model, approval mode, writable roots, and current token usage
+/status
+
+# Print config layer and policy diagnostics
+# Shows which config layers and policy settings are active and where they came from
+/debug-config
+
+# Configure TUI status-line fields
+/statusline
+
+# Legacy alias for /permissions
+/approvals  # still works, but no longer appears in the slash popup
 ```
 
 ### Features
