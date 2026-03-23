@@ -6,6 +6,7 @@ Each subdirectory contains a README file with specific information about the res
 
 - [`codex/`](./codex/)
 - [`claude_code/`](./claude_code/)
+- [`mcp/`](./mcp/)
 - [`n8n/`](./n8n/)
 - [`open_claw/`](./open_claw/)
 
