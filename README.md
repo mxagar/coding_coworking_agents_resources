@@ -16,6 +16,26 @@ Each subdirectory contains a README file with specific information about the res
 - [Worktrunk](https://worktrunk.dev/)
 - [Cmux](https://cmux.com/)
 
+## Setup
+
+Each subdirectory may contain its own setup instructions. If you need a generic Python environment, you can use the following recipe to based on [conda](https://docs.conda.io/en/latest/) and [pip-tools](https://github.com/jazzband/pip-tools):
+
+```bash
+# Create the necessary Python environment
+conda env create -f conda.yaml
+conda activate agents
+
+# Compile and install all dependencies
+pip-compile requirements.in
+pip-sync requirements.txt
+
+# If we need a new dependency,
+# add it to requirements.in 
+# And then:
+pip-compile requirements.in
+pip-sync requirements.txt
+```
+
 ## Authorship
 
 Mikel Sagardia, 2026.  
