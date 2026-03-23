@@ -17,8 +17,8 @@ Table of contents:
     - [Other Subcommands](#other-subcommands)
     - [Slash Commands](#slash-commands)
     - [Features and Configuration](#features-and-configuration)
-    - [AGENTS.md](#agentsmd)
-    - [SKILL.md](#skillmd)
+    - [Agents: AGENTS.md](#agents-agentsmd)
+    - [Skills: SKILL.md](#skills-skillmd)
     - [Subagents](#subagents)
   - [Codex - The Practical Guide (Udemy)](#codex---the-practical-guide-udemy)
 
@@ -351,9 +351,9 @@ exclude = ["AWS_*", "AZURE_*"]
 include_only = ["PATH", "HOME"]
 ```
 
-### AGENTS.md
+### Agents: AGENTS.md
 
-We can create persistent agent definitions:
+We can create persistent agent definitions or requirements:
 
 ```bash
 mkdir -p ~/.codex
@@ -361,7 +361,17 @@ touch ~/.codex/AGENTS.md
 # we write the content
 ```
 
-### SKILL.md
+This file is optional, but if it exists, Codex will read it on startup and use the agent definitions inside. It defines how agents behave semantically, what they can do, and how they should be used. Example:
+
+```markdown
+- Always write numpy-first implementations
+- Avoid unnecessary dependencies
+- Add unit tests for all logic
+```
+
+### Skills: SKILL.md
+
+A skill is a directory with a required `SKILL.md` file. It defines a specific behavior for Codex to trigger when certain conditions are met.
 
 We can use the built-in skill creator:
 
@@ -374,6 +384,8 @@ Creator asks:
 - What the skill does
 - When it should trigger
 - and whether it should stay instruction-only or include scripts.
+
+... and it creates the directory and the `SKILL.md` file with the manifest (yaml front matter) and instructions.
 
 We can also create a `SKILL.md` manually:
 
@@ -389,11 +401,11 @@ Skill instructions for Codex to follow.
 We can save skills in several places:
 
 - Repo scope
-  - `$CWD/.agents/skills`
-  - `$CWD/../.agents/skills`
-  - `$REPO_ROOT/.agents/skills`
+  - `$CWD/.agents/skills/<skill-name>/SKILL.md`
+  - `$CWD/../.agents/skills/<skill-name>/SKILL.md`
+  - `$REPO_ROOT/.agents/skills/<skill-name>/SKILL.md`
 - User scope
-  - `$HOME/.agents/skills`
+  - `$HOME/.agents/skills/<skill-name>/SKILL.md`
 
 We can also **install** skills:
 
@@ -443,7 +455,49 @@ Default subagents:
 
 To define custom agents:
 
-- 
+- Create TOML files in `~/.codex/agents/` or `.codex/agents/` with the agent definitions.
+- Codex only spawns subagents when we explicitly ask it to.
+- Agents can be launched in parallel; we need to specify that in the configuration.
+
+Agent definition structure example:
+
+```
+my-project/
+  .codex/
+    config.toml
+    AGENTS.md
+    agents/
+      reviewer.toml
+      implementer.toml
+      explorer.toml
+```
+
+Example TOML:
+
+```toml
+name = "reviewer"
+description = "Reviews code for correctness, bugs, and missing tests."
+
+developer_instructions = """
+Act like a strict senior engineer.
+Focus on:
+- correctness
+- edge cases
+- performance
+- missing tests
+"""
+
+model = "gpt-5.4"
+sandbox_mode = "read-only"
+```
+
+Example configuration to spawn agents in parallel, in `.codex/config.toml`:
+
+```conf
+[agents]
+max_threads = 6  # maximum number of parallel agents
+max_depth = 1  # whether agents can spawn sub-agents; 1 means only direct children of the main session
+```
 
 ## Codex - The Practical Guide (Udemy)
 
