@@ -21,7 +21,8 @@ This project contains resources related to coding and co-working agents.
 ### Resources
 
 - [https://developers.openai.com/codex/cli](https://developers.openai.com/codex/cli)
-- ...
+- [Udemy: Codex - The Practical Guide (Max Schwarzmüller)](https://www.udemy.com/course/codex-the-practical-guide/)
+
 
 ### Setup
 
