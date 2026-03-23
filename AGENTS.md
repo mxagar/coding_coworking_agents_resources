@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This repository is currently documentation-first. The main content lives in [README.md](/Users/mxagar/nexo/git_repositories/coding_coworking_agents_resources/README.md), which collects guides and notes about coding and co-working agents. [CLAUDE.md](/Users/mxagar/nexo/git_repositories/coding_coworking_agents_resources/CLAUDE.md) captures repository context for Claude-based tooling. There is no `src/`, `tests/`, or asset pipeline yet; add new material near the relevant section in `README.md` unless a new top-level guide is justified.
+This repository is currently documentation-first. The main content lives in [README.md](./README.md), which collects guides and notes about coding and co-working agents. [CLAUDE.md](./CLAUDE.md) captures repository context for Claude-based tooling. There is no `src/`, `tests/`, or asset pipeline yet; add new material near the relevant section in `README.md` unless a new top-level guide is justified.
 
 ## Build, Test, and Development Commands
 
