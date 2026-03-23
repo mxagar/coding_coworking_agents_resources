@@ -21,6 +21,8 @@ Table of contents:
     - [Skills: SKILL.md](#skills-skillmd)
     - [Subagents](#subagents)
   - [Codex - The Practical Guide (Udemy)](#codex---the-practical-guide-udemy)
+    - [1. Setup, Configuration, and Basic Usage](#1-setup-configuration-and-basic-usage)
+    - [2. Core Concepts \& Advanced Usage](#2-core-concepts--advanced-usage)
 
 ## Codex CLI Official Guide Summary
 
@@ -500,5 +502,20 @@ max_depth = 1  # whether agents can spawn sub-agents; 1 means only direct childr
 ```
 
 ## Codex - The Practical Guide (Udemy)
+
+Source: [Udemy course: Codex - The Practical Guide (Max Schwarzmüller)](https://www.udemy.com/course/codex-the-practical-guide/).
+
+### 1. Setup, Configuration, and Basic Usage
+
+Key ideas:
+
+- We need a paid plan; ChatGPT Plus is not enough.
+- Codex is both the agent as well as the coding model `*-codex`.
+- We have: CLI, app (recommended), cloud/web interface.
+- We can also use local models with `--oss` (e.g., Ollama, LM Studio); but they are not as powerful as the OpenAI models.
+- **Important**: we should switch off the option that uses our data/history to train the model: ChatGPT settings > Data Controls > Disable "Improve the model for everyone".
+- See [Setup](#setup) to see how to install Codex.
+
+### 2. Core Concepts & Advanced Usage
 
 TBD.
