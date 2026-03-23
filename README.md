@@ -13,6 +13,7 @@ Each subdirectory contains a README file with specific information about the res
 
 - [GitHub Spec Kit](https://github.com/github/spec-kit)
 - [Worktrunk](https://worktrunk.dev/)
+- [Cmux](https://cmux.com/)
 
 ## Authorship
 
