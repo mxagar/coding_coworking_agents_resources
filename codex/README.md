@@ -22,6 +22,13 @@ Table of contents:
     - [Subagents](#subagents)
   - [Codex - The Practical Guide (Udemy)](#codex---the-practical-guide-udemy)
     - [1. Setup, Configuration, and Basic Usage](#1-setup-configuration-and-basic-usage)
+      - [Introduction](#introduction)
+      - [Codex Configuration](#codex-configuration)
+      - [Security](#security)
+      - [Profiles and Configuration Override](#profiles-and-configuration-override)
+      - [Using Other Model Providers](#using-other-model-providers)
+      - [Advanced CLI Calls](#advanced-cli-calls)
+      - [Context Window Management](#context-window-management)
     - [2. Core Concepts \& Advanced Usage](#2-core-concepts--advanced-usage)
 
 ## Codex CLI Official Guide Summary
@@ -507,6 +514,8 @@ Source: [Udemy course: Codex - The Practical Guide (Max Schwarzmüller)](https:/
 
 ### 1. Setup, Configuration, and Basic Usage
 
+#### Introduction
+
 Key ideas:
 
 - We need a paid plan; ChatGPT Plus is not enough.
@@ -515,6 +524,291 @@ Key ideas:
 - We can also use local models with `--oss` (e.g., Ollama, LM Studio); but they are not as powerful as the OpenAI models.
 - **Important**: we should switch off the option that uses our data/history to train the model: ChatGPT settings > Data Controls > Disable "Improve the model for everyone".
 - See [Setup](#setup) to see how to install Codex.
+- VSCode integration: look for extension + install + open + login.
+- We can use the VSCode extension and/or the CLI instead of the Codex app.
+- If we use the CLI by running `codex`, the input field of the interactive session is called *composer*.
+- In an interactive session, we have the *slash commands*: `/status`.
+- In a session, we can choose the model and the reasoning effort (e.g., low, medium, high, extra high).
+  - Models: 5.1, 5.2, 5.3, 5.4, etc.
+  - Spark: faster
+  - In the app/CLI, we can select the model with the *slash command* `/model`.
+- Overview of the Codex app given:
+  - Threads, sessions
+  - Settings
+  - Slash commands
+  - Model selection
+  - Integrated terminal
+  - Open in VSCode
+  - Run/Play action: commands that should be run when the button is pressed, like install dependencies, etc. Alternatively, we can pass the commands we want to the composer.
+  - We can archive/pin/rename threads with the `...` button.
+- Tracking usage: `/status` or `Local` button, then usage/rate limits.
+- Every session is new and doesn't the previous ones. We can resume previous sessions with `/resume`.
+- The IDE and the Codex app have an `Undo` button, but it doesn't work in all cases.
+  - Therefore, we should use `git`. Version control is more important than ever using agents!
+
+#### Codex Configuration
+
+Resources:
+
+- [Configuration Reference](https://developers.openai.com/codex/config-reference)
+- [Useful Configurations](https://github.com/academind/codex-course-resources/blob/main/other/useful-config.md): [`useful_config.md`](./useful_config.md)
+
+Key ideas:
+
+- We configure codex in a `config.toml` file, located at `~/.codex/config.toml` (for global user settings) or `.codex/config.toml` (inside a specific project to override settings just for that repo). For local configuration, we just create our `.codex/` folder and the `config.toml` file inside it.
+- The Codex app has also some settings, which are not completely reflected in the `config.toml` file. Example app settings:
+  - General > Open in VSCode, Notifications, etc.
+  - Configuration > Select config file, sanbox settings, etc.
+  - Personalization > Personality, custom instructions, etc. **IMPORTANT**: custom instructions are stored in the global `AGENTS.md`, so they are injected into any session.
+
+Example `config.toml` from [`useful_config.md`](./useful_config.md):
+
+```toml
+
+### --- Core Model Settings: Control intelligence, cost, and speed.
+
+# The default model to use.
+# Options: "gpt-5.2-codex" (Standard), "gpt-5.3-codex" (Newest), "gpt-5.1-codex-mini" (Cheaper/Faster)
+model = "gpt-5.2-codex"
+
+# How hard the model thinks before answering (for models that support reasoning).
+# Options: "low", "medium" (default), "high", "xhigh"
+# Use "high" for complex refactors, "low" for quick syntax questions.
+model_reasoning_effort = "medium"
+
+# The communication style of the assistant.
+# Options: "friendly" (default), "pragmatic" (concise, less chatty), "none"
+personality = "pragmatic"
+
+### --- Permissions & Safety (Critical): Control what the agent is allowed to do without asking you.
+
+# When to pause and ask you for permission before running a command or editing a file.
+# Options:
+# - "on-request": (Default) The agent decides when to ask (balanced).
+# - "never":      (Risky) Runs everything automatically. Good for autonomous "codex exec" scripts.
+# - "untrusted":  Strict. Asks for almost everything.
+approval_policy = "on-request"
+
+# Controls file system and network access.
+# Options:
+# - "read-only":       Agent can look but cannot touch.
+# - "workspace-write": (Default) Can edit files inside the repo, but blocked from system files (e.g. /etc).
+# - "danger-full-access": No sandbox. Agent can edit system files and access the internet freely.
+sandbox_mode = "workspace-write"
+
+# Web search behavior.
+# Options:
+# - "cached": (Default) Safer. Uses OpenAI's pre-indexed copy of the web (prevents prompt injection).
+# - "live":   Fetches real-time data. Use this if you need docs for a library released yesterday.
+# - "disabled": No web access.
+web_search = "cached"
+
+### --- Environment & Integration: Make Codex play nicely with your tools and shell.
+
+# How citations (file links) in the chat response should open.
+# Options: "vscode", "cursor", "windsurf", "vscode-insiders", "none"
+file_opener = "vscode"
+
+# Controls which environment variables are passed to the agent's shell.
+# By default, Codex scrubs secrets to prevent leaks.
+[shell_environment_policy]
+# inherit = "all" # Default: Pass everything except known secrets.
+# Or use this to be strict and only pass specific variables:
+# include_only = ["PATH", "HOME", "TERM"]
+
+### --- Privacy & Telemetry
+
+# Disable anonymous usage statistics sent to OpenAI.
+[analytics]
+enabled = false
+
+# Disable the "/feedback" command and prompts.
+[feedback]
+enabled = false
+
+### --- Useful Features: Toggle experimental or optional capabilities.
+
+[features]
+# Speed up repeated commands by snapshotting the shell state (Beta).
+shell_snapshot = true
+
+# Enable "Plan Mode" to let the agent propose a strategy before coding (Stable).
+collaboration_modes = true
+
+### --- Profiles (Advanced): Switch between these using `codex --profile <name>`.
+
+# A profile for cheap, fast fixes.
+[profiles.fast]
+model = "gpt-5.1-codex-mini"
+web_search = "disabled"
+approval_policy = "never"
+
+# A profile for deep architectural work.
+[profiles.deep]
+model = "gpt-5.3-codex"
+model_reasoning_effort = "high"
+sandbox_mode = "read-only" # Safety first when thinking deeply
+
+### --- Model Context Protocol (MCP): Connect external tools (databases, Linear, Slack, etc.).
+
+# Example: Connect to a local documentation server
+# [mcp_servers.docs]
+# command = "npx"
+# args = ["-y", "@modelcontextprotocol/server-docs"]
+# enabled = true
+```
+
+Example `AGENTS.md`:
+
+```markdown
+Work carefully, don't rush changes. Always search for the cleanest best solution. Evaluate different solutions insteadd of picking the first one that comes to mind.
+Ensure a clean architecture and codebase. don't shy away big refactors - embrace them if they make sense.
+```
+
+#### Security
+
+Codex has some security features:
+
+- It can **read files** in the workspace: sandboxed environment, limited file access.
+- It can **edit files** in the workspace (current directory) and other explicitly writable roots, e.g.: `~/.codex/memories/`, etc.
+- **Commands** that need broader system access may **require explicit approval**; e.g.: `git add ...`
+- **Network access** is restricted by default.
+- **Limited web search** by default (cached, no live access). Cached is curated by OpenAI; live search can end up in prompt injection attacks!
+
+Dangerous configuration, which disables default safety features:
+
+```toml
+approval_policy = "never"  # vs "on-request" (default) or "untrusted"
+sandbox_mode = "danger-full-access"  # vs "workspace-write" (default) or "read-only"
+web_search = "live"  # vs "cached" (default) or "disabled"
+```
+
+Also :
+
+- In the Codex app, we can toggle the "Default permissions" to "Full access" (dangerous) in each session.
+- In the IDE, we can do the same
+- In the CLI, we use `/permissions` and/or the `--dangerously-bypass-approvals-and-sandbox` or `--yolo` flag.
+
+#### Profiles and Configuration Override
+
+We can define profiles in the `config.toml`.
+
+```toml
+# ==============================================================================
+# PROFILE 1: "Deep Work"
+# For complex refactors requiring high reasoning and full autonomy.
+# ==============================================================================
+[profiles.deep-work]
+# Use the smarter model with more effort
+model = "gpt-5.3-codex"
+model_reasoning_effort = "xhigh"
+ 
+# ==============================================================================
+# PROFILE 2: "Quick Fix"
+# For fast, low-cost tasks like fixing typos or simple bugs.
+# ==============================================================================
+[profiles.quick-fix]
+# Use the smaller, faster model to save costs/time
+model = "gpt-5.3-codex-spark"
+model_reasoning_effort = "low"
+web_search = "disabled"
+```
+
+We use the profiles as follows:
+
+```bash
+# codex --profile <name>
+codex --profile deep-work
+codex --profile quick-fix
+```
+
+Also, it's possible to override some configuration settings on the fly in the CLI:
+
+```bash
+# codex --config <config-setting> / codex -c <config-setting>
+codex -c model="gpt-5.2-codex"
+codex -c model="gpt-5.2-codex" -c sandbox_mode="read-only"
+```
+
+#### Using Other Model Providers
+
+Official guide: [Custom model providers](https://developers.openai.com/codex/config-advanced#custom-model-providers).
+
+By default, Codex uses OpenAI's models, but we can configure it to use other providers, too, e.g., Ollama, Mistral, etc.
+
+It seems it works best with OpenAI models, though.
+
+The quick way using the CLI to launch local models is the following:
+
+```bash
+# Start Ollama server
+ollama list  # get available local models
+ollama serve <model-name>  # e.g., llama3
+
+# Call codex CLI with the --oss flag to use the local model
+# which defaults to Ollama if it's running
+# The model name must be the Ollama <model-name>
+codex --oss --model llama3
+```
+
+This can be configured in the `config.toml` permanently as well:
+
+```toml
+# Set the default "oss" provider to be ollama
+oss_provider = "ollama"
+ 
+[model_providers.ollama]
+name = "Ollama Local"
+base_url = "http://localhost:11434/v1" # Must end in /v1 for compatibility
+wire_api = "chat" # Tells Codex to use the /chat/completions endpoint
+```
+
+To use other **cloud/API providers**, we can configure `config.toml` as follows:
+
+```toml
+### --- Groq: You can add any provider that offers an OpenAI-compatible endpoint.
+
+model_provider = "groq" # Set this to match the key below
+model = "llama-3.1-70b-versatile"
+ 
+[model_providers.groq]
+name = "Groq"
+base_url = "https://api.groq.com/openai/v1"
+env_key = "GROQ_API_KEY" # Reads from your environment variables
+wire_api = "chat"
+
+### --- Azure OpenAI: Codex has specific native support for Azure OpenAI.
+
+model_provider = "azure"
+ 
+[model_providers.azure]
+name = "Azure OpenAI"
+# Your endpoint usually looks like this
+base_url = "https://YOUR_RESOURCE_NAME.openai.azure.com/openai"
+wire_api = "responses" # or "chat" depending on your deployment
+env_key = "AZURE_OPENAI_API_KEY"
+ 
+# Azure often requires specific query parameters for API versions
+[model_providers.azure.query_params]
+api-version = "2025-04-01-preview"
+```
+
+#### Advanced CLI Calls
+
+```bash
+# Initial prompt
+codex "Explain the codebase"
+
+# Avoid interactive sessions
+# This is useful for: cron jobs, CICD jobs, etc.
+# This makes possible to build our own automations on top of codex!
+codex exec "Analyze the codebase and suggest improvements"
+codex exec "Analyze the code" --json  # request JSON output!
+```
+
+#### Context Window Management
+
+
 
 ### 2. Core Concepts & Advanced Usage
 
