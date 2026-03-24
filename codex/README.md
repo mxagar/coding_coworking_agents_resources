@@ -510,7 +510,11 @@ max_depth = 1  # whether agents can spawn sub-agents; 1 means only direct childr
 
 ## Codex - The Practical Guide (Udemy)
 
-Source: [Udemy course: Codex - The Practical Guide (Max Schwarzmüller)](https://www.udemy.com/course/codex-the-practical-guide/).
+Sources:
+
+- [Udemy course: Codex - The Practical Guide (Max Schwarzmüller)](https://www.udemy.com/course/codex-the-practical-guide/).
+- [GitHub repository: Codex course resources](https://github.com/academind/codex-course-resources)
+- [Academind Community (Discord)](https://academind.com/community/)
 
 ### 1. Setup, Configuration, and Basic Usage
 
@@ -808,7 +812,18 @@ codex exec "Analyze the code" --json  # request JSON output!
 
 #### Context Window Management
 
+The context window is filled by many stuff:
 
+- Prompt
+- Codebase files
+- Tool calls
+- etc.
+
+If it is close to be full, Codex starts to summarize the conversation to free up space. This is the *auto-compact* feature.
+
+We can also ask it to summarize with the `/compact` slash command.
+
+Note that if we start a new session (e.g., with `/new`), the context window is reset, but we can still access the previous sessions with `/resume`.
 
 ### 2. Core Concepts & Advanced Usage
 
