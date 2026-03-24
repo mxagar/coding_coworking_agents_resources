@@ -4,6 +4,8 @@ This folder contains an example app built and used during the cours; I downloade
 
 [Bun](https://bun.com/) is needed; Bun is a combination of a runtime, package manager, and bundler for JavaScript and TypeScript. It is a great alternative to `Node.js + npm`.
 
+The app is based on [Next.js](https://nextjs.org/), which is a framework on top of React for building web applications.  The app is a simple note taking app, where we can create, edit, delete, and share notes.
+
 Install Bun:
 
 ```bash
@@ -26,8 +28,12 @@ bun install
 
 # Start the development server
 bun run dev
+# Open http://localhost:3000 in the browser to see the app running.
 
 # To stop the server, press Ctrl + C in the terminal.
 ```
 
-... and finally, continue to [`Instructions.md`](./Instructions.md) and the upper [`../README.md`](../README.md).
+Continue to 
+
+- [`Instructions.md`](./Instructions.md) if you want to see the original `README.md` of the example app,
+- and to the upper [`../README.md`](../README.md) if you want to know more about the usage of Codex.

@@ -30,6 +30,8 @@ Table of contents:
       - [Advanced CLI Calls](#advanced-cli-calls)
       - [Context Window Management](#context-window-management)
     - [2. Core Concepts \& Advanced Usage](#2-core-concepts--advanced-usage)
+      - [Example App](#example-app)
+        - [Project Structure](#project-structure)
       - [Promp and Context Engineering](#promp-and-context-engineering)
 
 ## Codex CLI Official Guide Summary
@@ -828,7 +830,56 @@ Note that if we start a new session (e.g., with `/new`), the context window is r
 
 ### 2. Core Concepts & Advanced Usage
 
-This section uses the example project in the folder [`example-app/`](./example-app/), which is provided in [`codex-course-resources/code-snapshots/starting-project.zip`](https://github.com/academind/codex-course-resources/blob/main/code-snapshots/starting-project.zip). [Bun](https://bun.com/) is needed; Bun is a combination of a runtime, package manager, and bundler for JavaScript and TypeScript. It is a great alternative to `Node.js + npm`. The [`/example-app/README.md`](./example-app/README.md) explains how to install and run it.
+#### Example App
+
+This section uses the example project in the folder [`example-app/`](./example-app/), which is provided in [`codex-course-resources/code-snapshots/starting-project.zip`](https://github.com/academind/codex-course-resources/blob/main/code-snapshots/starting-project.zip).
+
+[Bun](https://bun.com/) is needed; Bun is a combination of a runtime, package manager, and bundler for JavaScript and TypeScript. It is a great alternative to `Node.js + npm`. The [`/example-app/README.md`](./example-app/README.md) explains how to install and run it.
+
+The app is based on [Next.js](https://nextjs.org/), which is a framework on top of React for building web applications. The app is a simple note taking app, where we can create, edit, delete, and share notes.
+
+Summary:
+
+```bash
+cd ./example-app
+
+# Install bun
+npm install -g bun
+
+# Install dependencies
+bun install
+
+# Start the development server
+bun run dev
+# Open http://localhost:3000 in the browser to see the app running.
+
+# To stop the server, press Ctrl + C in the terminal.
+```
+
+##### Project Structure
+
+In general, nice best practices to work with agents:
+
+- `Prompts.md`: we can collect the (most important) prompts we use to create the app. Specially, the initial project description prompt, which is used to create a larger and detailed specifications prompt/file, listed below: `Specs.md`.
+- `Specs.md`: this file contains the ellaborated project description, worked by leveraging an LLM. It should contain, among others:
+  - App description
+  - Tech stack
+  - Goals and constraints
+  - Architecture overview (incl. authentication, database, frontend/backend, etc.)
+  - Routes (UI), connections: e.g., if authenticated redirect to `/notes`, else redirect to `/login`, etc.
+  - Data models, Database schema
+  - Example SQL statements
+  - Pipelines, common workflows for the user
+  - Error handling and security
+  - Styling
+  - Migration
+  - Environment variables
+  - Acceptance criteria
+  - etc.
+
+The `Specs.md` is very important; an example file for teh example app is here: [`example-app/SPEC.MD`](./example-app/SPEC.MD).
+
+We should spend time crafting that `Specs.md` and edit it manually until we are happy with it.
 
 #### Promp and Context Engineering
 
