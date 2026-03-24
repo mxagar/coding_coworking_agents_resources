@@ -1037,3 +1037,48 @@ The advantage of the app is that we can add comments in the diff planel, which a
 
 It is very important to commit the changes we want in order to have a tracking history.
 
+#### AGENTS.md
+
+The `SPEC.md` file is very large and not always relevant, i.e., not for all prompts. Instead, we can use an `AGENTS.md` file, where we define general instructions for any agent we spawn in any session.
+
+If we have contents in a project, we can use the slash command `/init`, which creates an appropriate `AGENTS.md` file with some initial instructions.
+
+We can also create the `AGENTS.md` file manually, or prompt it:
+
+```markdown
+create an AGENTS.md file in the app folder codex/example-app
+```
+
+Look at the [example AGENTS.md](./example-app/AGENTS.md):
+
+- Brief description of the project and its goals.
+- Main usage commansds.
+- General instructions.
+- etc.
+
+In Claude Code, we don't use `AGENTS.md`, but instead `CLAUDE.md`. One way to deal with that is to use `CLAUDE.md` for general agent instructions and then add this line in the `.codex/config.toml`:
+
+```toml
+project_doc_fallback_filenames = ["CLAUDE.md"]
+```
+
+That way, if `AGENTS.md` is not found, it will fallback to `CLAUDE.md` and use it as the source of instructions for the agents.
+
+We can check that the `AGENTS.md` is being used by asking Codex *what are your instructions?* in a new session.
+
+An `AGENTS.md` file should be:
+
+- Clear and concise.
+- Changed as the project evolves.
+
+#### Nested AGENTS.md
+
+We can also have `AGENTS.md` files in subfolders, with specific instructions for that folder (e.g., `backend/`, `frontend/`, etc.).
+
+The loading logic is the following:
+
+- If we start codex in a subfolder, it will load the `AGENTS.md` file in that subfolder, if it exists, and ignore the one in the root.
+- If we start codex in the root, it will always load the `AGENTS.md` file in the root, and then the ones in the subfolders, if they exist. The instruction sets will be extended, so it is important to make sure they are not contradicting each other.
+
+#### Wortrees
+
