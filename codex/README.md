@@ -30,6 +30,7 @@ Table of contents:
       - [Advanced CLI Calls](#advanced-cli-calls)
       - [Context Window Management](#context-window-management)
     - [2. Core Concepts \& Advanced Usage](#2-core-concepts--advanced-usage)
+      - [Promp and Context Engineering](#promp-and-context-engineering)
 
 ## Codex CLI Official Guide Summary
 
@@ -827,4 +828,14 @@ Note that if we start a new session (e.g., with `/new`), the context window is r
 
 ### 2. Core Concepts & Advanced Usage
 
-TBD.
+This section uses the example project in the folder [`example-app/`](./example-app/), which is provided in [`codex-course-resources/code-snapshots/starting-project.zip`](https://github.com/academind/codex-course-resources/blob/main/code-snapshots/starting-project.zip). [Bun](https://bun.com/) is needed; Bun is a combination of a runtime, package manager, and bundler for JavaScript and TypeScript. It is a great alternative to `Node.js + npm`. The [`/example-app/README.md`](./example-app/README.md) explains how to install and run it.
+
+#### Promp and Context Engineering
+
+A **prompt** is the sum of two things:
+
+- Instructions
+- **Relevant** Context
+
+The more precise we are in both, the better.
+
