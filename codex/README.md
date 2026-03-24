@@ -31,8 +31,10 @@ Table of contents:
       - [Context Window Management](#context-window-management)
     - [2. Core Concepts \& Advanced Usage](#2-core-concepts--advanced-usage)
       - [Example App](#example-app)
-        - [Project Structure](#project-structure)
-      - [Promp and Context Engineering](#promp-and-context-engineering)
+      - [Specs File](#specs-file)
+      - [Prompt and Context Engineering](#prompt-and-context-engineering)
+      - [Plan Mode](#plan-mode)
+      - [Reviewing Generated Code](#reviewing-generated-code)
 
 ## Codex CLI Official Guide Summary
 
@@ -552,6 +554,8 @@ Key ideas:
 - Every session is new and doesn't the previous ones. We can resume previous sessions with `/resume`.
 - The IDE and the Codex app have an `Undo` button, but it doesn't work in all cases.
   - Therefore, we should use `git`. Version control is more important than ever using agents!
+  - Every time codex makes some changes, diffs are shown in the app; also we can use the diff panel or the `/diff` slash command to see the changes.
+  - Get used to committing changes every time Codex makes some changes, so that we can easily revert if something goes wrong; also this makes possible to better track what Codex is doing and how it's changing the codebase.
 
 #### Codex Configuration
 
@@ -856,12 +860,12 @@ bun run dev
 # To stop the server, press Ctrl + C in the terminal.
 ```
 
-##### Project Structure
+#### Specs File
 
-In general, nice best practices to work with agents:
+In general, it's a very good idea to create two files in every project we work on with Codex or any other agentic framework:
 
-- `Prompts.md`: we can collect the (most important) prompts we use to create the app. Specially, the initial project description prompt, which is used to create a larger and detailed specifications prompt/file, listed below: `Specs.md`.
-- `Specs.md`: this file contains the ellaborated project description, worked by leveraging an LLM. It should contain, among others:
+- `Prompts.md`: we collect the (most important) prompts we use to create the app. Specially, the initial project description prompt, which is used to create a larger and detailed specifications prompt/file, listed below: `SPEC.md`.
+- `SPEC.md`: this file contains the ellaborated project description, worked by leveraging an LLM. It should contain, among others:
   - App description
   - Tech stack
   - Goals and constraints
@@ -877,11 +881,19 @@ In general, nice best practices to work with agents:
   - Acceptance criteria
   - etc.
 
-The `Specs.md` is very important; an example file for teh example app is here: [`example-app/SPEC.MD`](./example-app/SPEC.MD).
+The `SPEC.md` is very important; an example file for the example app is here: [`example-app/SPEC.MD`](./example-app/SPEC.MD).
 
-We should spend time crafting that `Specs.md` and edit it manually until we are happy with it.
+We should spend time crafting that `SPEC.md` and edit it manually until we are happy with it.
 
-#### Promp and Context Engineering
+We can use `codex` to clean up the `SPEC.md`; we can point to it explicitly by naming it or also using the `@filename` syntax, which creates a link to the file. Example:
+
+```
+# Low reasoning enough
+Analyze the @SPEC.md file and fix/change the following:
+- ...
+```
+
+#### Prompt and Context Engineering
 
 A **prompt** is the sum of two things:
 
@@ -890,3 +902,135 @@ A **prompt** is the sum of two things:
 
 The more precise we are in both, the better.
 
+In that sense, adding the `@SPEC.md` file to the prompt is a very good idea
+
+Similarly, if we think there might be important context for the model in a file, we need to explicitly mention it in the prompt with the `@filename` syntax.
+
+#### Plan Mode
+
+If we are unsure whether the prompt will lead to a good solution or not, we can use the *Plan Mode*. To activate:
+
+- `SHIFT + TAB`: toggle on/off everywhere (CLI, app, IDE)
+- In the IDE & app: click on `+`, select Plan mode
+- In the CLI: `/plan` slash command
+
+In plan mode, we send the prompt and Codex:
+
+- Asks questions it needs
+- It makes a plan of how to solve the problem, with steps and subtask
+
+The created plan is presented as a Markdown. We should review it and accept it, if we consider it, else ask to modify it as desired. Then, we exit the plan mode and codex starts to implement the plan.
+
+Initial prompt example in plan mode:
+
+```
+You need to build a simple note taking app. The app starter code is in codex/example-app/, and you should implement inside that folder always. The app description is given in codex/example-app/README.md, codex/example-app/Instrcutions.md, and most importantly in codex/example-app/SPEC.MD.
+
+Set up all base pages and layouts, as described in the specs @SPEC.MD. Do not add any concrete logic, UI, authentication, database logic, or anything like that.
+
+Just create the pages + layout and output dummy content.
+```
+
+This outputs the following plan:
+
+```markdown
+  # TinyNotes route scaffold in codex/example-app
+                                                                                                                                                      
+  ## Summary                                                                                                                                          
+                                                                                                                                                      
+  Create a scaffold-only App Router structure for TinyNotes inside codex/example-app/app, matching the routes in SPEC.MD and using placeholder        
+  content only. This pass will set up the page tree, shared layouts, route segmentation, a custom 404, and minimal loading placeholders for note/     
+  share flows. It will not add auth logic, note logic, database code, server actions, forms with behavior, or polished UI components.                 
+                                                                                                                                                      
+  ## Implementation Changes                                                                                                                           
+                                                                                                                                                      
+  - Replace the current single demo homepage with a route scaffold that matches the spec:                                                             
+      - /                                                                                                                                             
+      - /login                                                                                                                                        
+      - /register                                                                                                                                     
+      - /notes                                                                                                                                        
+      - /notes/new                                                                                                                                    
+      - /notes/[id]                                                                                                                                   
+      - /s/[token]                                                                                                                                    
+      - custom not-found.tsx                                                                                                                          
+  - Organize the App Router with route groups to reflect the product structure even though no auth logic exists yet:                                  
+      - a public/auth group for /login and /register                                                                                                  
+      - an authenticated app group for /notes, /notes/new, and /notes/[id]                                                                            
+      - the shared-note route /s/[token] outside the authenticated group                                                                              
+  - Add group-level layouts so the future app has the right structural seams:                                                                         
+      - root layout remains global shell and metadata entrypoint                                                                                      
+      - auth-group layout with simple placeholder auth-shell wrapper                                                                                  
+      - notes-group layout with simple placeholder app-shell wrapper                                                                                  
+  - Each page will render dummy static content that makes the intended purpose explicit:                                                              
+      - / states that it is the redirect entrypoint in the real app                                                                                   
+      - /login and /register show placeholder auth page content                                                                                       
+      - /notes shows placeholder note list page and empty-state text                                                                                  
+      - /notes/new shows placeholder create-note editor page                                                                                          
+      - /notes/[id] shows placeholder note editor/share-controls page                                                                                 
+      - /s/[token] shows placeholder public shared note page                                                                                          
+      - not-found.tsx shows a custom TinyNotes 404 page                                                                                               
+  - Add minimal route-adjacent placeholders where the spec explicitly calls for loading states:                                                       
+      - loading placeholder for the notes area                                                                                                        
+      - loading placeholder for the shared-note route                                                                                                 
+  - Keep styling intentionally minimal and structural:                                                                                                
+      - reuse the existing global CSS entrypoint                                                                                                      
+      - adjust layout/page markup only enough to distinguish shells and placeholders                                                                  
+      - no component library, no real forms, no interactive editor, no “elegant acqua” UI buildout in this pass                                       
+                                                                                                                                                      
+  ## Public Interfaces / Route Structure                                                                                                              
+                                                                                                                                                      
+  - App Router routes created:                                                                                                                        
+      - GET /                                                                                                                                         
+      - GET /login                                                                                                                                    
+      - GET /register                                                                                                                                 
+      - GET /notes                                                                                                                                    
+      - GET /notes/new                                                                                                                                
+      - GET /notes/[id]                                                                                                                               
+      - GET /s/[token]                                                                                                                                
+  - App Router support files created:                                                                                                                 
+      - root layout.tsx                                                                                                                               
+      - group layouts for auth and notes sections                                                                                                     
+      - not-found.tsx                                                                                                                                 
+      - loading placeholders for notes/share flows                                                                                                    
+  - No server actions, API routes, middleware, auth handlers, database files, or client-side logic are introduced.                                    
+
+  - Start the app and confirm each path renders placeholder content without runtime errors.
+  - Confirm the notes pages render inside the notes-group layout and auth pages render inside the auth-group layout.
+  - Confirm /s/test-token resolves to the shared-note placeholder page.
+  - Confirm unknown routes render the custom not-found.tsx.
+  - Confirm no placeholder page imports non-existent logic modules or server-side dependencies.
+
+  ## Assumptions
+
+  - “Set up all base pages and layouts” means scaffold the route tree and shared layout boundaries now, without implementing any redirects, auth      
+    guards, data fetching, mutations, editor behavior, or share behavior.
+  - “Do not add concrete logic, UI, authentication, database logic, or anything like that” means placeholders may contain static headings,
+    descriptive copy, and structural wrappers only.
+  - The scaffold will include loading placeholders because the spec explicitly calls for loading states and you selected that scope.
+  - Route grouping is an implementation detail that should be added now to keep the future authenticated/public split clean, even though it does not  
+    affect URLs.
+```
+
+#### Reviewing Generated Code
+
+Once the code is generated, we can try starting the app in the CLI:
+
+```bash
+# Install dependencies if not done yet
+cd .../example-app
+bun install
+
+# Start the development server
+bun run dev
+# Open http://localhost:3000 in the browser to see the app running.
+
+# To stop the server, press Ctrl + C in the terminal.
+```
+
+Next, we should carefully review the code changes:
+
+- The diff panel in the Codex app is useful.
+- We can also use the `/diff` slash command to see the changes.
+- If we are in the IDE, we can check the version control diff.
+
+The advantage of the app is that we can add comments in the diff planel, which are included in the next prompt. If we are not using the app, we need to explicitly mention the change we would like to modify, e.g., do not remove a font, or whatsoever.
