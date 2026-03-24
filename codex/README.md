@@ -934,81 +934,81 @@ Just create the pages + layout and output dummy content.
 This outputs the following plan:
 
 ```markdown
-  # TinyNotes route scaffold in codex/example-app
-                                                                                                                                                      
-  ## Summary                                                                                                                                          
-                                                                                                                                                      
-  Create a scaffold-only App Router structure for TinyNotes inside codex/example-app/app, matching the routes in SPEC.MD and using placeholder        
-  content only. This pass will set up the page tree, shared layouts, route segmentation, a custom 404, and minimal loading placeholders for note/     
-  share flows. It will not add auth logic, note logic, database code, server actions, forms with behavior, or polished UI components.                 
-                                                                                                                                                      
-  ## Implementation Changes                                                                                                                           
-                                                                                                                                                      
-  - Replace the current single demo homepage with a route scaffold that matches the spec:                                                             
-      - /                                                                                                                                             
-      - /login                                                                                                                                        
-      - /register                                                                                                                                     
-      - /notes                                                                                                                                        
-      - /notes/new                                                                                                                                    
-      - /notes/[id]                                                                                                                                   
-      - /s/[token]                                                                                                                                    
-      - custom not-found.tsx                                                                                                                          
-  - Organize the App Router with route groups to reflect the product structure even though no auth logic exists yet:                                  
-      - a public/auth group for /login and /register                                                                                                  
-      - an authenticated app group for /notes, /notes/new, and /notes/[id]                                                                            
-      - the shared-note route /s/[token] outside the authenticated group                                                                              
-  - Add group-level layouts so the future app has the right structural seams:                                                                         
-      - root layout remains global shell and metadata entrypoint                                                                                      
-      - auth-group layout with simple placeholder auth-shell wrapper                                                                                  
-      - notes-group layout with simple placeholder app-shell wrapper                                                                                  
-  - Each page will render dummy static content that makes the intended purpose explicit:                                                              
-      - / states that it is the redirect entrypoint in the real app                                                                                   
-      - /login and /register show placeholder auth page content                                                                                       
-      - /notes shows placeholder note list page and empty-state text                                                                                  
-      - /notes/new shows placeholder create-note editor page                                                                                          
-      - /notes/[id] shows placeholder note editor/share-controls page                                                                                 
-      - /s/[token] shows placeholder public shared note page                                                                                          
-      - not-found.tsx shows a custom TinyNotes 404 page                                                                                               
-  - Add minimal route-adjacent placeholders where the spec explicitly calls for loading states:                                                       
-      - loading placeholder for the notes area                                                                                                        
-      - loading placeholder for the shared-note route                                                                                                 
-  - Keep styling intentionally minimal and structural:                                                                                                
-      - reuse the existing global CSS entrypoint                                                                                                      
-      - adjust layout/page markup only enough to distinguish shells and placeholders                                                                  
-      - no component library, no real forms, no interactive editor, no “elegant acqua” UI buildout in this pass                                       
-                                                                                                                                                      
-  ## Public Interfaces / Route Structure                                                                                                              
-                                                                                                                                                      
-  - App Router routes created:                                                                                                                        
-      - GET /                                                                                                                                         
-      - GET /login                                                                                                                                    
-      - GET /register                                                                                                                                 
-      - GET /notes                                                                                                                                    
-      - GET /notes/new                                                                                                                                
-      - GET /notes/[id]                                                                                                                               
-      - GET /s/[token]                                                                                                                                
-  - App Router support files created:                                                                                                                 
-      - root layout.tsx                                                                                                                               
-      - group layouts for auth and notes sections                                                                                                     
-      - not-found.tsx                                                                                                                                 
-      - loading placeholders for notes/share flows                                                                                                    
-  - No server actions, API routes, middleware, auth handlers, database files, or client-side logic are introduced.                                    
+# TinyNotes route scaffold in codex/example-app
 
-  - Start the app and confirm each path renders placeholder content without runtime errors.
-  - Confirm the notes pages render inside the notes-group layout and auth pages render inside the auth-group layout.
-  - Confirm /s/test-token resolves to the shared-note placeholder page.
-  - Confirm unknown routes render the custom not-found.tsx.
-  - Confirm no placeholder page imports non-existent logic modules or server-side dependencies.
+## Summary
 
-  ## Assumptions
+Create a scaffold-only App Router structure for TinyNotes inside codex/example-app/app, matching the routes in SPEC.MD and using placeholder
+content only. This pass will set up the page tree, shared layouts, route segmentation, a custom 404, and minimal loading placeholders for note/
+share flows. It will not add auth logic, note logic, database code, server actions, forms with behavior, or polished UI components.
 
-  - “Set up all base pages and layouts” means scaffold the route tree and shared layout boundaries now, without implementing any redirects, auth      
-    guards, data fetching, mutations, editor behavior, or share behavior.
-  - “Do not add concrete logic, UI, authentication, database logic, or anything like that” means placeholders may contain static headings,
-    descriptive copy, and structural wrappers only.
-  - The scaffold will include loading placeholders because the spec explicitly calls for loading states and you selected that scope.
-  - Route grouping is an implementation detail that should be added now to keep the future authenticated/public split clean, even though it does not  
-    affect URLs.
+## Implementation Changes
+
+- Replace the current single demo homepage with a route scaffold that matches the spec:
+    - /
+    - /login
+    - /register
+    - /notes
+    - /notes/new
+    - /notes/[id]
+    - /s/[token]
+    - custom not-found.tsx
+- Organize the App Router with route groups to reflect the product structure even though no auth logic exists yet:
+    - a public/auth group for /login and /register
+    - an authenticated app group for /notes, /notes/new, and /notes/[id]
+    - the shared-note route /s/[token] outside the authenticated group
+- Add group-level layouts so the future app has the right structural seams:
+    - root layout remains global shell and metadata entrypoint
+    - auth-group layout with simple placeholder auth-shell wrapper
+    - notes-group layout with simple placeholder app-shell wrapper
+- Each page will render dummy static content that makes the intended purpose explicit:
+    - / states that it is the redirect entrypoint in the real app
+    - /login and /register show placeholder auth page content
+    - /notes shows placeholder note list page and empty-state text
+    - /notes/new shows placeholder create-note editor page
+    - /notes/[id] shows placeholder note editor/share-controls page
+    - /s/[token] shows placeholder public shared note page
+    - not-found.tsx shows a custom TinyNotes 404 page
+- Add minimal route-adjacent placeholders where the spec explicitly calls for loading states:
+    - loading placeholder for the notes area
+    - loading placeholder for the shared-note route
+- Keep styling intentionally minimal and structural:
+    - reuse the existing global CSS entrypoint
+    - adjust layout/page markup only enough to distinguish shells and placeholders
+    - no component library, no real forms, no interactive editor, no “elegant acqua” UI buildout in this pass
+
+## Public Interfaces / Route Structure
+
+- App Router routes created:
+    - GET /
+    - GET /login
+    - GET /register
+    - GET /notes
+    - GET /notes/new
+    - GET /notes/[id]
+    - GET /s/[token]
+- App Router support files created:
+    - root layout.tsx
+    - group layouts for auth and notes sections
+    - not-found.tsx
+    - loading placeholders for notes/share flows
+- No server actions, API routes, middleware, auth handlers, database files, or client-side logic are introduced.
+
+- Start the app and confirm each path renders placeholder content without runtime errors.
+- Confirm the notes pages render inside the notes-group layout and auth pages render inside the auth-group layout.
+- Confirm /s/test-token resolves to the shared-note placeholder page.
+- Confirm unknown routes render the custom not-found.tsx.
+- Confirm no placeholder page imports non-existent logic modules or server-side dependencies.
+
+## Assumptions
+
+- “Set up all base pages and layouts” means scaffold the route tree and shared layout boundaries now, without implementing any redirects, auth
+  guards, data fetching, mutations, editor behavior, or share behavior.
+- “Do not add concrete logic, UI, authentication, database logic, or anything like that” means placeholders may contain static headings,
+  descriptive copy, and structural wrappers only.
+- The scaffold will include loading placeholders because the spec explicitly calls for loading states and you selected that scope.
+- Route grouping is an implementation detail that should be added now to keep the future authenticated/public split clean, even though it does not
+  affect URLs.
 ```
 
 #### Reviewing Generated Code
@@ -1034,3 +1034,6 @@ Next, we should carefully review the code changes:
 - If we are in the IDE, we can check the version control diff.
 
 The advantage of the app is that we can add comments in the diff planel, which are included in the next prompt. If we are not using the app, we need to explicitly mention the change we would like to modify, e.g., do not remove a font, or whatsoever.
+
+It is very important to commit the changes we want in order to have a tracking history.
+
