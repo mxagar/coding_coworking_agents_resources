@@ -667,6 +667,9 @@ sandbox_mode = "read-only" # Safety first when thinking deeply
 # command = "npx"
 # args = ["-y", "@modelcontextprotocol/server-docs"]
 # enabled = true
+# Or:
+[mcp_servers.context7]
+url = "https://mcp.context7.com/mcp"
 ```
 
 Example `AGENTS.md`:
@@ -1080,5 +1083,143 @@ The loading logic is the following:
 - If we start codex in a subfolder, it will load the `AGENTS.md` file in that subfolder, if it exists, and ignore the one in the root.
 - If we start codex in the root, it will always load the `AGENTS.md` file in the root, and then the ones in the subfolders, if they exist. The instruction sets will be extended, so it is important to make sure they are not contradicting each other.
 
-#### Wortrees
+#### Worktrees and Environments
 
+Worktrees are a Git feature that allows us to have multiple working directories associated with the same repository.
+This is useful when we want to work on multiple branches at the same time without having to switch between them, which makes sense when we have 2+ agents working on different sessions simultaneously.
+
+The Codex app comes with built-in support for worktrees; the CLI and the IDE still do not support them, but we can use the Git commands to create and manage worktrees.
+
+Workflow in the Codex app:
+
+- In the branch selector menu, we create a new branch.
+- Click on `local/cloud` button, select `New worktree`, select the new branch we created: then, everything is done for us.
+- We should also be able to create a worktree from non-existing branch, but it seems that the app doesn't support it yet?
+- So if we have 2 agents, one can be working in the `main` branch and the other one in the `feature-x` branch, and they won't interfere with each other.
+- When the `main` agent finishes, we can merge the `feature-x` branch into `main`; we can do that with the Codex app or manually with Git commands.
+
+Notes on the Codex app settings (Settings > Worktrees / Environments):
+
+- Under Settings > Worktrees we can see the past worktrees we have created, and we can also delete them.
+- Under Settings > Environments we can see the environments we have created; for each environment, we need to configure the setup script, which is a script that runs every time we start a session in that environment. Example setup script:
+  ```bash
+  pip install -r requirements.txt
+  ./run_seyup.sh
+  cp ../.env .  # copy the .env file to the worktree, if it is needed for the session
+  ```
+
+If we cannot use the Codex app, the usual manual workflow is the following:
+
+```bash
+# Create a worktree for a new feature branch
+# This creates a new folder `../feature-x` with the content of the branch `feature-x`
+# Note that not all the files are copied, the ones managed/used by git
+git worktree add ../feature-x -b feature-x  # if no branch exists yet
+git worktree add ../feature-x feature-x  # if the branch already exists
+git worktree add ../hotfix <commit-hash>  # to create a worktree from a specific commit, useful for hotfixes
+
+# Work inside the worktree
+cd ../feature-x
+# ... work, edit, etc.
+git add .
+git commit -m "Add feature"
+git push
+
+# Final commit in the feature branch
+git commit -m "Feature complete"  
+
+# Switch back to the repository directory and pull main branch
+cd ../original-repo
+git checkout main
+git pull
+
+# Merge the feature branch back to main
+git merge feature-x
+```
+
+#### Adding External Context
+
+Sometimes we want the agents to use a tool they don't necessarily know. We have different options:
+
+1. We can provide the URL of the relevant page; but, for that, `web_search` needs to be set to `live` in the configuration, which is dangerous. We can also hope that the cached search has the relevant page indexed, but it is not guaranteed.
+2. We can copy and paste the relevant content from the web page (nowadays, many documentation pages have a copy button). Then, we paste it in the composer, and often change to plan mode (`SHIFT + TAB`) to give the model more time to process the information and create a better plan. Example:
+    ```
+    <tool-x-documentation>  # optional
+    [Pasted Content 1234 chars]  # when content is pasted, this appears
+    </tool-x-documentation>  # optional
+    SHIFT + TAB  # to switch to plan mode
+    ```
+
+#### Steering and Queeuing Follow Up Questions
+
+When Codex is working (e.g., implementing, or in plan mode), we can still use it in two ways:
+
+- `ENTER`: we *steer* it, i.e., we inject the question immediately, and it will stop the current process, answer the question, and then continue with the previous process. This is useful when we want to change the course of action immediately, or we want to clarify something that is crucial for the current process.
+- `TAB`: we *queue* the question, i.e., it will be answered once the current task is finished. This is useful when we don't want to interrupt the current process, but we want to make sure that a question is answered once it finishes.
+
+In the Codex app is the opposite: `ENTER` queues the question.
+
+Also, when *we get asked by Codex* (e.g., in plan mode), sometimes we have the option of hitting `TAB` to add more notes.
+
+#### Model Context Protocol (MCP) Servers
+
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/docs/getting-started/intro) Servers are a standardized way of exposing tools to LLMs.
+
+We can buuld our MCP servers or use exiting ones.
+
+There is one MCP server which serves many up-to-date documentation pages of different tools: [Context7](https://context7.com/); that way, we can use it instead of allowing live web search. This makes sense for hot or trendy new libraries, like [better-auth](https://github.com/better-auth/better-auth), used in the example app.
+
+In general, we should carefully add MCP servers, because agents (LLMs) tend to get worse if we expose them to too many MCP servers; so we should use the ones we only know we need. Some other interesting MCP servers:
+
+- [Playwright](https://github.com/microsoft/playwright-mcp?tab=readme-ov-file), to give Codex browser access.
+- [DeepWiki](https://docs.devin.ai/work-with-devin/deepwiki-mcp), to give Codex search access to essentially ALL GitHub repositories.
+
+To install or connect to that server, we can check the documentation to the different clients: [Context7: MCP Clients](https://context7.com/docs/resources/all-clients).
+We are interested in the OpenAI Codex client, which has the following instructions:
+
+```markdown
+
+**Install Using CLI (Don't use this one)**
+
+    codex mcp add context7 -- npx -y @upstash/context7-mcp --api-key YOUR_API_KEY
+
+
+**Local Server Connection (Don't use this one)**
+
+Add this to your Codex configuration file (`~/.codex/config.toml` or `.codex/config.toml`):
+
+    [mcp_servers.context7]
+    command = "npx"
+    args = ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
+    startup_timeout_sec = 20
+
+**Remote Server Connection <- USE THIS ONE!**
+
+Add this to your Codex configuration file (`~/.codex/config.toml` or `.codex/config.toml`):
+
+
+    [mcp_servers.context7]
+    url = "https://mcp.context7.com/mcp"
+    http_headers = { "CONTEXT7_API_KEY" = "YOUR_API_KEY" }  # we don't need the API key, we can remove tihs line
+
+```
+
+So we need to add the following to the `.codex/config.toml` file:
+
+```toml
+[mcp_servers.context7]
+url = "https://mcp.context7.com/mcp"
+# The API key is for higher rate limits, but we don't really need it
+```
+
+Then, we should see the MCP sever after starting a new session:
+
+- In the Codex app: Settings > MCP Servers > Context7: Enable it.
+- IDE: same, open Settings.
+- In the CLI: `/mcp` to see the available MCP servers; status `enabled` is shown for context7.
+
+MCPs are in theory automatically used, but in practice, it doesn't damage to explicitly mention them in the prompt:
+
+```text
+Implement the authetication using better-auth. Use tge Context7 MCP to access the up-to-date documentation of better-auth.
+```
