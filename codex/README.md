@@ -1321,4 +1321,54 @@ Expected behavior:
 - Return concise summary with file reference
 ```
 
-In order to 
+In order to use/invoke the skill:
+
+- We can ask in the prompt a task clearly related to the skill description
+- or we can explicitly mention the skill in the prompt, e.g., `Use the docs-maintainer skill to...`
+- or we can use the `$<skill-name>` syntax, which creates a link to the skill, e.g., `Use the $docs-maintainer skill to...`
+
+There are some example skills from the course in [`.agents/skills/`](.agents/skills/).
+
+##### Skill Examples
+
+- code-review
+- python-library-scaffold: if we start new projects often, we can set up a template
+- lint-and-typecheck: run linters and typecheckers, and fix the errors
+- pytest-fix-loop: run pytest, and fix the errors in a loop until all tests pass
+- check-repo-conventions
+- notebook-to-module
+- analyze-training-logs
+- pr-review-checklist
+- api-docs-from-code
+- wiki-post-edit
+- pr-review
+- ...
+
+#### Advanced Skills: References and Scripts
+
+There two skills [`.agents/skills/`](.agents/skills/) which implement *references* and *scripts*:
+
+- `.agents/skills/modern-best-practice-react-components` has a `references/` folder with a Markdown inside, which is quite extensive; but it will be loaded only when needed.
+- `.agents/skills/sqlite-explorer` has a `scripts/` folder with a SQL script inside, which is executed when needed.
+
+In their respective `SKILL.md` files, we make reference to these files:
+
+```markdown
+**AVOID** `useEffect()`. See the ["You Might Not Need An Effect" guide](references/you-dont-need-useeffect.md) for detailed guidance.
+...
+**Use Bun script**: `sqlite-explorer.ts`. You find a `sqlite-explorer.ts` script (which must be executed using Bun!) in [`${SKILL_DIR}/scripts/sqlite-explorer.ts`](scripts/sqlite-explorer.ts) that implements this skill. It accepts command-line arguments to specify the database path, query, and mode (read-only vs write).
+...
+```
+
+#### Built-IN Skill Creator
+
+Codex ships with a built-in *skill creator*, which is lauched with `$skill-creator`.
+It then asks which skill we want to create (and we need to answer the questions).
+
+1. skill name and description
+2. example prompts to trigger it
+3. reusable resources we might want: references, scripts, etc.
+4. where to place it
+
+This *skill creator* creates an optional file `.../<skill-name>/agents/openai.yaml` with a nicedisplay name and short description which is used when we run `/skills`.
+
