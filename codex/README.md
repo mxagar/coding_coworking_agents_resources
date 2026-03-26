@@ -1197,7 +1197,6 @@ Add this to your Codex configuration file (`~/.codex/config.toml` or `.codex/con
 
 Add this to your Codex configuration file (`~/.codex/config.toml` or `.codex/config.toml`):
 
-
     [mcp_servers.context7]
     url = "https://mcp.context7.com/mcp"
     http_headers = { "CONTEXT7_API_KEY" = "YOUR_API_KEY" }  # we don't need the API key, we can remove tihs line
@@ -1223,3 +1222,103 @@ MCPs are in theory automatically used, but in practice, it doesn't damage to exp
 ```text
 Implement the authetication using better-auth. Use tge Context7 MCP to access the up-to-date documentation of better-auth.
 ```
+
+#### Agent Skills
+
+Agent skills are already a standard: [Agent Skills Standard](https://agentskills.io/home).
+
+The standard defines a folder structure for skills, which is the following:
+
+```
+.agents/skills/
+    <skill-name>/
+    ├── SKILL.md          # Required: instructions + metadata
+    ├── scripts/          # Optional: executable code
+    ├── references/       # Optional: documentation
+    └── assets/           # Optional: templates, resources
+```
+
+Note: that's the standard; codex also allows defining the skills inside the `.codex/skills/` folder, but it is recommended to use the `.agents/skills/` folder for compatibility with other agentic frameworks and tools (e.g., Claude, Cursor, etc.).
+
+As we see, a skill is basically defined in a `SKILL.md` file inside its `<skill-name>/` folder. Then, we can optionally add scripts, references, and assets.
+
+We could write in the `AGENTS.md` file the skill description, but `AGENTS.md` could become huge and it is loaded every time taking space in the context.
+**The main idea with `SKILL.md` is that the files are LAZY-loaded, i.e., they are loaded only when needed!**
+That way `AGENTS.md` is kept lean and contains only general at all times **relevant** knowledge.
+
+> Skills use progressive disclosure to manage context efficiently:
+> - Discovery: At startup, agents load only the name and description of each available skill, just enough to know when it might be relevant.
+> - Activation: When a task matches a skill’s description, the agent reads the full SKILL.md instructions into context.
+> - Execution: The agent follows the instructions, optionally loading referenced files or executing bundled code as needed.
+> This approach keeps agents fast while giving them access to more context on demand.
+
+We can check the available skills as follows:
+
+- CLI: with the `/skills` slash command.
+- Codex app: left panel > Skills. We can add new skills from there as well.
+- IDE: Settings > Skill Settings.
+
+An exemplary `SKILL.md` file for the skill [`docs-maintainer`](../.agents/skills/docs-maintainer/SKILL.md):
+
+```markdown
+<!-- .agents/skills/docs-maintainer/SKILL.md -->
+---
+name: docs-maintainer
+description: Use when the user asks to improve or expand repository documentation with concise, accurate, actionable Markdown edits.
+---
+
+# Purpose
+Use this skill when the user asks to improve or expand repository documentation (README, guides, onboarding notes) with accurate, concise, actionable Markdown.
+
+# When to use
+- User asks to update `README.md`, `AGENTS.md`, or other docs
+- User asks for examples, quickstart steps, or command snippets
+- User asks for doc cleanup, structure, or consistency fixes
+
+# When not to use
+- Pure code implementation requests with no documentation scope
+- Tasks requiring external research that is not requested
+
+# Inputs expected
+- Target file(s), if specified
+- User intent (add section, rewrite, fix structure, etc.)
+- Existing style conventions in repository docs
+
+# Workflow
+1. Read the target documentation and repository instructions (especially `AGENTS.md`).
+2. Identify the minimum focused change that satisfies the request.
+3. Edit docs in-place, preserving existing voice and heading structure.
+4. Validate:
+   - Headings are consistent
+   - Commands are plausible and copy-pasteable
+   - Examples match repository context
+5. Summarize what changed and note any assumptions/unverified commands.
+
+# Style rules
+- Keep prose concise and instructional.
+- Prefer short sections and flat bullet lists.
+- Use fenced code blocks with language hints (`bash`, `powershell`, `json`).
+- Avoid fluff and generic boilerplate.
+
+# Output contract
+- Provide:
+  - Files changed
+  - Short change summary
+  - Any follow-up suggestions (only if useful)
+
+# Guardrails
+- Do not invent files/tools that don’t exist in the repo.
+- Do not claim commands were executed unless actually run.
+- If uncertain, state assumptions explicitly.
+
+# Example invocation
+User: “Add a section to README with ripgrep tips for finding TODOs.”
+
+Expected behavior:
+- Locate best placement in `README.md`
+- Add practical `rg` examples
+- Keep formatting aligned with current doc style
+- Return concise summary with file reference
+```
+
+In order to 
