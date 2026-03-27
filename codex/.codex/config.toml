@@ -92,3 +92,8 @@ sandbox_mode = "read-only" # Safety first when thinking deeply
 # Or:
 [mcp_servers.context7]
 url = "https://mcp.context7.com/mcp"
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest"]
+

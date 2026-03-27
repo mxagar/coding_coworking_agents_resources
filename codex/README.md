@@ -1382,7 +1382,88 @@ We can install/find (3rd party) skills in several ways:
 - We can open [https://skills.sh/](https://skills.sh/), find a skill we like (and check it's safe) and the install it with the provided command; we often 
 - In the CLI: with the `$find-skills <description>` we find the skill in our skill set. 
 
-#### Feedback Loops
+#### Feedback Loops, Reviews and Tests
+
+We should make sure that Codex/the agent self-verfies its outputs:
+
+- Linting
+- Type checks
+- Building the project
+- Automated tests (unit, E2E, etc.)
+- Give browser access to self-iterate the outputs (in case the output is a web app, for instance)
+
+We should prompt Codex to do that and provide the necessary instructions and tools (MCP servers):
+
+- pylint
+- mypy
+- uv, poetry
+- pytest
+- ...
+
+Recall that we can also add the documentation in the prompt:
+
+```text
+Implement E2E tests with pytest
+<pytest_documentation>
+[Pasted Content X chars]
+</pytest_documentation>
+```
+
+Usually, using *plan mode* (`SHIFT + TAB`) is a good idea in this case, to give the model more time to process the information and create a better plan.
+
+Note that maybe it makes sense to add in the `AGENTS.md` file that we need to lint, run tests & Co. if available! Provide briefly the command for that: *ALWAYS run unit tests via `poetry run pytest`*.
+
+Codex has also a built-in *code reviewer* which can review the uncommitted changes or the committed changes against the base branch:
+
+- App/IDE: `/` > Code Review
+- CLI: `/review` slash command
+
+Whenever the agent has performed important changes in the codebase, we should use this.
+
+#### Browser Access for Self-Review
+
+One way of achieving that is using the [Playwright MCP](https://github.com/microsoft/playwright-mcp).
+
+Playwright opens a Chromium browser and gives access to it to Codex; we basically open the page we want and let Codex interact with it:
+
+- Capture screenshots
+- Refresh
+- Click on things
+- ...
+
+As explained in the link, we can install it in codex as follows:
+
+```bash
+codex mcp add playwright npx "@playwright/mcp@latest"
+```
+
+Alternatively, we can add it manually in the `config.toml` file:
+
+```toml
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest"]
+```
+
+We can check that with `/mcp` slash command.
+
+Then, we can give browser access to Codex with a prompt instruction like this:
+
+```text
+Can you check how the app looks in the browser? Use the Playwright MCP to open http://localhost:3000 and check if the UI looks good? Click around and check if there are any errors in the console.
+```
+
+Similarly to testing, it is convenient to add the instruction of verifying the app in the browser in the `AGENTS.md` file, so that it is always loaded in context: *ALWAYS use Playwright MCP to verify changes that have an impact on the UI or user experience*.
+
+#### Forking Sessions
+
+We can fork sessions: `/fork`. This opens the possibility of exploring different approaches in parallel:
+
+- In a sessions, we fork it; so we have 2 sessions with the same context and instructions.
+- We post the same prompt in the two sessions, and change to plan mode `SHIFT + TAB`.
+- Each session will produce a different output/solution!
+
+#### Codex Cloud
 
 
 
