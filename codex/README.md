@@ -556,6 +556,7 @@ Key ideas:
   - Therefore, we should use `git`. Version control is more important than ever using agents!
   - Every time codex makes some changes, diffs are shown in the app; also we can use the diff panel or the `/diff` slash command to see the changes.
   - Get used to committing changes every time Codex makes some changes, so that we can easily revert if something goes wrong; also this makes possible to better track what Codex is doing and how it's changing the codebase.
+- We can paste images! Just copy an image, then `Ctrl + V` in the composer/app/IDE prompt.
 
 #### Codex Configuration
 
@@ -1371,4 +1372,17 @@ It then asks which skill we want to create (and we need to answer the questions)
 4. where to place it
 
 This *skill creator* creates an optional file `.../<skill-name>/agents/openai.yaml` with a nicedisplay name and short description which is used when we run `/skills`.
+
+#### Adding 3rd Party Skills
+
+We can install/find (3rd party) skills in several ways:
+
+- In the Codex app: left pannel > Skills > We can select and add any skill curated by OpenAI. They are added to the global `conf.toml`.
+- In the IDE: Settings > Skill Settings > We can select and add any skill curated by OpenAI.
+- We can open [https://skills.sh/](https://skills.sh/), find a skill we like (and check it's safe) and the install it with the provided command; we often 
+- In the CLI: with the `$find-skills <description>` we find the skill in our skill set. 
+
+#### Feedback Loops
+
+
 
