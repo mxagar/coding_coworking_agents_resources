@@ -5,10 +5,11 @@ This project contains resources related to coding and co-working agents.
 Each subdirectory contains a README file with specific information about the resources and guides related to that particular agent framework or topic.
 
 - [`codex/`](./codex/)
-- [`claude_code/`](./claude_code/)
+- [`claude/`](./claude/)
 - [`mcp/`](./mcp/)
 - [`n8n/`](./n8n/)
 - [`open_claw/`](./open_claw/)
+- [`openai`](./openai)
 
 ## Collection of Other Resources
 
