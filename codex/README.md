@@ -1463,7 +1463,72 @@ We can fork sessions: `/fork`. This opens the possibility of exploring different
 - We post the same prompt in the two sessions, and change to plan mode `SHIFT + TAB`.
 - Each session will produce a different output/solution!
 
-#### Codex Cloud
+#### Codex Cloud Setup
 
+We can run Codex in the Cloud: [https://chatgpt.com/codex](https://chatgpt.com/codex).
+
+To that end, we need to grant access to our GitHub account, and then we can select the repositories we want to work on with Codex. Then, the repo(s) are cloned in the cloud (on OpenAI's servers), and we can start working on them.
+
+We can even ask to launch several Codex agents (1-4x versions) so that different approaches are implemented.
+
+The agents create the pull requests by themselves, and we can review them and merge them if we like the changes.
+
+**Important**: we need to create a *cloud environment*: [https://chatgpt.com/codex](https://chatgpt.com/codex) > Settings > Create Environment:
+
+- Select repo
+- Container image
+- Environment variables (visible)
+- Cached container or not
+- Secrets (hidden)
+- Setup script (e.g., `pip install -r requirements.txt`)
+- Maintenance script (run when containers are resumed from cached state)
+- Agent internet access: OFF by default; we can also define a domain whitelist. Note that the Cloud session will run without us interacting with it.
+
+Then, we can select that environment when we start a new session.
+
+#### Codex Cloud Usage
+
+Instead of using the web app on [https://chatgpt.com/codex](https://chatgpt.com/codex), we can also use the CLI or the IDE, and select the Cloud environment when starting a new session.
+
+```bash
+codex cloud --help
+
+Commands:
+  exec    Submit a new Codex Cloud task without launching the TUI
+  status  Show the status of a Codex Cloud task
+  list    List Codex Cloud tasks
+  apply   Apply the diff for a Codex Cloud task locally
+  diff    Show the unified diff for a Codex Cloud task
+  help    Print this message or the help of the given subcommand(s)
+```
+
+We see we can submit a new task with `exec`, check the status with `status`, list all the tasks with `list`.
+
+It is also possible to toggle/send a task to the cloud from the Codex app or the IDE: *composer* box, click on the `Local` icon, and select remote/cloud. We need a cloud environment for that, as explained in the previous section.
+
+If the `Cloud` execution is selected, even though we are using the CLI/IDE/App, the execution happens in the Cloud.
+
+We can also run the *plan mode* locally and then send the task to the cloud!
+
+On the web interface [https://chatgpt.com/codex](https://chatgpt.com/codex), we'll see the tasks, and we can open an observation shell into them.
+
+Usual workflow:
+
+- Run *plan mode* locally, to check the plan and make sure it is good.
+- Send the task to the Cloud, where it is executed.
+- Check the status and logs in the Cloud.
+- Check the task is finished and pick its id: `codex cloud list`
+- Fetch the diff and apply it locally: `codex cloud apply <task-id>`
+- Now, we have the results locally, we can review them, test them, etc.
+- Commit and push the changes if we like them.
+
+#### Codex App Automations
+
+In the Codex app, we can create *automations*, which are custom workflows that can be triggered with a slash command or a button.
+
+Example: Update `AGENTS.md` with new instructions for the agents, and add a summary of the changes in the commit message.
+
+- Assign to a project
+- Select when: days, times, etc.
 
 
