@@ -33,6 +33,7 @@ Table of contents:
     - [Plan Mode](#plan-mode)
     - [Web Information](#web-information)
     - [Model Context Protocol (MCP) Servers](#model-context-protocol-mcp-servers)
+    - [Subagents](#subagents)
   - [3. Beyond Local CLI Usage](#3-beyond-local-cli-usage)
 
 ## 1. Getting Started
@@ -459,8 +460,12 @@ Then, in the session, we check the MCP servers:
 To use an MCP server, we mention it in the prompt:
 
 ```text
-
+# Plan mode
+Use the context7 MCP to find teh relevant documentation on better-auth
+# Then, check the plan, iterate, etc.
 ```
+
+### Subagents
 
 ## 3. Beyond Local CLI Usage
 
