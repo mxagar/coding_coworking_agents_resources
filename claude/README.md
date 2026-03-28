@@ -25,7 +25,14 @@ Table of contents:
     - [Version Control and Undoing Unwanted Changes](#version-control-and-undoing-unwanted-changes)
     - [Commands, Shortcuts \& Settings Cheatsheet](#commands-shortcuts--settings-cheatsheet)
   - [2. Key Features and Efficient Usage](#2-key-features-and-efficient-usage)
+    - [SPEC File](#spec-file)
     - [Prompt and Context Engineering](#prompt-and-context-engineering)
+    - [Initializing Claude Projects](#initializing-claude-projects)
+    - [CLAUDE.md (equivalent to AGENTS.md)](#claudemd-equivalent-to-agentsmd)
+    - [Claude Auto-Memory](#claude-auto-memory)
+    - [Plan Mode](#plan-mode)
+    - [Web Information](#web-information)
+    - [Model Context Protocol (MCP) Servers](#model-context-protocol-mcp-servers)
   - [3. Beyond Local CLI Usage](#3-beyond-local-cli-usage)
 
 ## 1. Getting Started
@@ -108,7 +115,7 @@ As in codex, we have *slash commands*; here are the most important ones:
 
 Among them, note these:
 
-- `/clear`: in a session, if we want to start anew, use this to remove history/context.
+- `/clear`: in a session, if we want to start anew, use this to remove history/context. **Use it extensively!**
 - `/context`: statistics of the context we have used
   - We see that system prompts & co. can reach up to 10% of all 200k tokens
   - There is an autocompact buffer; autocompact is triggered when we reach 85% of all tokens
@@ -216,7 +223,7 @@ docker run -it --rm \
   -v "$(pwd)":/workspace \
   -v ~/.claude:/root/.claude \
   ghcr.io/anthropics/claude-code:latest \
-  --dangerously-skip-permissions     
+  --dangerously-skip-permissions
 
 # API Key
 docker run -it --rm \
@@ -276,9 +283,184 @@ Image from that blog post:
 
 ![Anatomy of the .claude folder](./anatomy_claude_folder.jpg)
 
+### SPEC File
+
+In general, it's a very good idea to create a `SPEC.md` file in every project we work on with Codex or any other agentic framework; it will contain the elaborated project description, worked by leveraging an LLM. It should contain, among others:
+- App description
+- Tech stack
+- Goals and constraints
+- Architecture overview (incl. authentication, database, frontend/backend, etc.)
+- Routes (UI), connections: e.g., if authenticated redirect to `/notes`, else redirect to `/login`, etc.
+- Data models, Database schema
+- Example SQL statements
+- Pipelines, common workflows for the user
+- Error handling and security
+- Styling
+- Migration
+- Environment variables
+- Acceptance criteria
+- etc.
+
+We should spend time crafting that `SPEC.md` and edit it manually until we are happy with it.
+
+We can use `claude` to clean up the `SPEC.md`; we point to specific files with `@<filename>`, as with Codex. Also, if we want to clearly signal topic sections we can do it with `<topic> ... </topic>`.
+
+```text
+We are building an app described in @SPEC.md
+Please format that file as proper markdown.
+Also use this documentation for the library better-auth:
+<better-auth-docs>
+[Paste content]
+</better-auth-docs>
+```
+
+See the example [`SPEC.MD`](../codex/example-app/SPEC.MD).
+
 ### Prompt and Context Engineering
 
+A **prompt** is the sum of two things:
 
+- Specific Instructions
+- **Relevant** Context
+
+The more precise we are in both, the better.
+
+No extra context should be passed, *in case it is required*.
+
+In that sense, the aforementioned `SPEC.md` is both specific and relevant.
+
+Guidelines:
+
+- Be concise and precise -- describe the task clearly, but omit irrelevant details and fluff.
+- Only provide useful context -- don't reference files or docs you think might matter; only include what you know matters.
+- Think before you prompt -- plan first, then write your prompt; heavy reliance on follow-ups signals insufficient upfront planning.
+- Don't withhold known challenges -- if you know about a pitfall or edge case, share it (and the recommended solution) in your initial prompt.
+- Explicitly specify tools -- if a particular tool or feature should be used, say so; don't assume the AI will pick it automatically.
+- Core theme: you are in control -- the quality of AI output is largely determined by how well you steer it.
+
+### Initializing Claude Projects
+
+First, we should define our environment and install all necessary packages, e.g., with conda/uv/poetry/pip.
+
+Then, we `resume` and `/clear` our session.
+
+Finally, we run `/init`, which analyzes the current codebase (which contains the `SPEC.md` and maybe some starter structure) and creates the `CLAUDE.md` file.
+
+The more context Claude has the better for `CLAUDE.md`.
+
+### CLAUDE.md (equivalent to AGENTS.md)
+
+`CLAUDE.md` is equivalent to `AGENTS.md` in Codex, and it's create the same way: via `/init`.
+
+We should have at least one of these in the root folder, and every new session we create/clear will load it.
+
+We should spend time editing this `CLAUDE.md`:
+
+- Be as brief as possible
+- Include general but important information
+- etc.
+
+```text
+This app aims to build X.
+
+The specification is in @SPEC.md, read it.
+
+Behavior guidelines: give short answers, ...
+
+Commands...
+
+Architecture...
+
+Key dependencies...
+```
+
+We can add a `CLAUDE.md` file in each subfolder; these are loaded & read only if Claude edits the files in those subfolders.
+
+### Claude Auto-Memory
+
+`CLAUDE.md` is general *memory* maintained by the user.
+
+In addition to that, Claude automatically stores more information in `~/.claude/projects/<project>/memory/MEMORY.md`, which contains topic specific memories, such as:
+
+- Preferred style
+- Errors it made
+- ...
+
+So it tries to learn from the interaction.
+The file is kept concise.
+Claude loads parts (first 200 lines) in every new conversation. 
+We should not edit it.
+
+We can toggle off/on this via `/memory`.
+
+### Plan Mode
+
+Once our `SPEC.md` is defined, we can start implementing with the first prompt; for the first prompt, it is recommended:
+
+- To ask a first limited version, or specific parts only and dummy structures for the rest.
+- To use *plan mode*, which is triggered with `SHIFT + TAB` x2 or `/plan`.
+
+Plan mode asks questions and turns *bad prompts* into *good prompts*.
+
+Note that plans are saved temporarily in `.claude/`.
+
+When the plan is finished, it is displayed and we are asked:
+
+- If we accept it and it should continue
+- If we want changes
+- etc.
+
+We should be as precise as possible reviewing the plan to our needs.
+
+### Web Information
+
+When we are iterating our development, if specific documentation is needed, we need to provide it; there are 3 ways:
+
+- We copy and paste the relevant documentation: `<documentation> [Pastes X characters] </documentation>`
+- We provide the link: `Use this URL: X`; **unlike Codex, Clause has web search by default!**
+- We use an MCP server with the documentation
+
+### Model Context Protocol (MCP) Servers
+
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/docs/getting-started/intro) Servers are a standardized way of exposing tools to LLMs.
+
+We can build our MCP servers or use exiting ones.
+
+There is one MCP server which serves many up-to-date documentation pages of different tools: [Context7](https://context7.com/); that way, we can use it instead of allowing live web search. This makes sense for hot or trendy new libraries, like [better-auth](https://github.com/better-auth/better-auth), used in the example app.
+
+In general, we should carefully add MCP servers, because agents (LLMs) tend to get worse if we expose them to too many MCP servers; so we should use the ones we only know we need. Some other interesting MCP servers:
+
+- [Playwright](https://github.com/microsoft/playwright-mcp?tab=readme-ov-file), to give Codex browser access.
+- [DeepWiki](https://docs.devin.ai/work-with-devin/deepwiki-mcp), to give Codex search access to essentially ALL GitHub repositories.
+
+To install or connect to that server, we can check the documentation to the different clients: [Context7: MCP Clients](https://context7.com/docs/resources/all-clients#claude-code).
+
+```bash
+# Local Server Connection: That's the one we need
+# We can remove the API_KEY part, since it's not necessary
+# We can use a Context7 API key for higher usage, but it's not compulsory
+claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp [--api-key YOUR_API_KEY]
+claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp
+claude mcp add --scope user context7 --scope user -- npx -y @upstash/context7-mcp  # Install globally
+# Added stdio MCP server context7 with command: npx -y @upstash/context7-mcp to user config
+# File modified: $HOME/.claude.json
+
+# Remote Server Connection
+claude mcp add --scope user --header "CONTEXT7_API_KEY: YOUR_API_KEY" --transport http context7 https://mcp.context7.com/mcp
+```
+
+Then, in the session, we check the MCP servers:
+
+```bash
+/mcp
+# context7 should appear, among others
+```
+
+To use an MCP server, we mention it in the prompt:
+
+```text
+
+```
 
 ## 3. Beyond Local CLI Usage
 

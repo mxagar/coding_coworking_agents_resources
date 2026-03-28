@@ -31,10 +31,27 @@ Table of contents:
       - [Context Window Management](#context-window-management)
     - [2. Core Concepts \& Advanced Usage](#2-core-concepts--advanced-usage)
       - [Example App](#example-app)
-      - [Specs File](#specs-file)
+      - [SPEC File](#spec-file)
       - [Prompt and Context Engineering](#prompt-and-context-engineering)
       - [Plan Mode](#plan-mode)
       - [Reviewing Generated Code](#reviewing-generated-code)
+      - [AGENTS.md](#agentsmd)
+      - [Nested AGENTS.md](#nested-agentsmd)
+      - [Worktrees and Environments](#worktrees-and-environments)
+      - [Adding External Context](#adding-external-context)
+      - [Steering and Queeuing Follow Up Questions](#steering-and-queeuing-follow-up-questions)
+      - [Model Context Protocol (MCP) Servers](#model-context-protocol-mcp-servers)
+      - [Agent Skills](#agent-skills)
+        - [Skill Examples](#skill-examples)
+      - [Advanced Skills: References and Scripts](#advanced-skills-references-and-scripts)
+      - [Built-IN Skill Creator](#built-in-skill-creator)
+      - [Adding 3rd Party Skills](#adding-3rd-party-skills)
+      - [Feedback Loops, Reviews and Tests](#feedback-loops-reviews-and-tests)
+      - [Browser Access for Self-Review](#browser-access-for-self-review)
+      - [Forking Sessions](#forking-sessions)
+      - [Codex Cloud Setup](#codex-cloud-setup)
+      - [Codex Cloud Usage](#codex-cloud-usage)
+      - [Codex App Automations](#codex-app-automations)
 
 ## Codex CLI Official Guide Summary
 
@@ -864,7 +881,7 @@ bun run dev
 # To stop the server, press Ctrl + C in the terminal.
 ```
 
-#### Specs File
+#### SPEC File
 
 In general, it's a very good idea to create two files in every project we work on with Codex or any other agentic framework:
 
@@ -1166,7 +1183,7 @@ Also, when *we get asked by Codex* (e.g., in plan mode), sometimes we have the o
 
 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/docs/getting-started/intro) Servers are a standardized way of exposing tools to LLMs.
 
-We can buuld our MCP servers or use exiting ones.
+We can build our MCP servers or use exiting ones.
 
 There is one MCP server which serves many up-to-date documentation pages of different tools: [Context7](https://context7.com/); that way, we can use it instead of allowing live web search. This makes sense for hot or trendy new libraries, like [better-auth](https://github.com/better-auth/better-auth), used in the example app.
 
@@ -1221,7 +1238,7 @@ Then, we should see the MCP sever after starting a new session:
 MCPs are in theory automatically used, but in practice, it doesn't damage to explicitly mention them in the prompt:
 
 ```text
-Implement the authetication using better-auth. Use tge Context7 MCP to access the up-to-date documentation of better-auth.
+Implement the authentication using better-auth. Use tge Context7 MCP to access the up-to-date documentation of better-auth.
 ```
 
 #### Agent Skills
