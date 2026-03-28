@@ -21,16 +21,20 @@ Table of contents:
     - [Claude Internal Tools](#claude-internal-tools)
     - [Configuration](#configuration)
     - [Permissions Management](#permissions-management)
+    - [Claude's Native Sandbox](#claudes-native-sandbox)
+    - [Version Control and Undoing Unwanted Changes](#version-control-and-undoing-unwanted-changes)
+    - [Commands, Shortcuts \& Settings Cheatsheet](#commands-shortcuts--settings-cheatsheet)
   - [2. Key Features and Efficient Usage](#2-key-features-and-efficient-usage)
   - [3. Beyond Local CLI Usage](#3-beyond-local-cli-usage)
 
 ## 1. Getting Started
 
-I mainly followed the course 
+I mainly followed the following course, with its repository:
 
-[Udemy: Claude Code - The Practical Guide (Max Schwarzmüller)](https://www.udemy.com/course/claude-code-the-practical-guide/)
+- [Udemy: Claude Code - The Practical Guide (Max Schwarzmüller)](https://www.udemy.com/course/claude-code-the-practical-guide/)
+- [`github.com/academind/claude-code-course-resources`](https://github.com/academind/claude-code-course-resources)
 
-which has an example project to try the different capabilities of Claude.
+The course has an example project to try the different capabilities of Claude.
 That example project is the same as in [`../codex/example-app/`](../codex/example-app/).
 That project needs [bun](https://bun.com/docs/installation) installed:
 
@@ -188,7 +192,76 @@ For more info, check: [Claude Code Available Settings](https://code.claude.com/d
 
 ### Permissions Management
 
+By default Claude has restricted permissions to edit the files on the current folder; it asks every time and it can only see the current folder.
 
+We can grant permanent folder write permissions with `SHIFT + TAB`. But only for writing files; for instance, `git add` is not granted -- we are still asked.
+
+If `SHIFT + TAB` x2 -> *plan mode*; if 3x -> no extra permissions, no *plan mode*.
+
+An alternative is to choose the option `Yes, don't ask again` when we're asked.
+
+The most permissive (and dangerous) way is to use this flag when starting Claude:
+
+```bash
+# All permissions granted: complete RW on our computer
+claude --dangerously-skip-permissions
+```
+
+A safer alternative is to run Claude in a docker container with all the permissions:
+
+```bash
+# Claude Subscription
+docker run -it --rm \
+  -v "$(pwd)":/workspace \
+  -v ~/.claude:/root/.claude \
+  ghcr.io/anthropics/claude-code:latest \
+  --dangerously-skip-permissions     
+
+# API Key
+docker run -it --rm \
+  -v "$(pwd)":/workspace \
+  -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+  ghcr.io/anthropics/claude-code:latest \
+  --dangerously-skip-permissions
+```
+
+### Claude's Native Sandbox
+
+Probably the safest way of auto-allowing commands is running in *sandbox* mode:
+
+- We start Claude with `claude --dangerously-skip-permissions`
+- Immediately we activate `/sandbox` with auto-allow
+- This updates the `settings.local.json`
+
+The result is that Claude has all the permissions for the current folder, but not outside it. To remove the sandbox, enter `/sandbox` again.
+
+Using the sandbox in combination with `-dangerously-skip-permissions` is probably the best Claude experience.
+
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
+  }
+}
+
+```
+
+### Version Control and Undoing Unwanted Changes
+
+Version control is a must, especially working with agents:
+
+- To undo unwanted changes.
+- To run diffs.
+
+There are 2 other ways to restore a change:
+
+- Press `ESC` x2: it rewinds to the desired snapshot.
+- *Slash command* `/rewind`: equivalent.
+
+### Commands, Shortcuts & Settings Cheatsheet
+
+![Cheatsheet](./assets/claude-code-cli-settings-cheat-sheet.jpg)
 
 ## 2. Key Features and Efficient Usage
 

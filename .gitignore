@@ -209,3 +209,4 @@ __marimo__/
 # Added
 .vscode
 requirements.txt
+.DS_Store
