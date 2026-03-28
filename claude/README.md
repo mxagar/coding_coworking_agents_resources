@@ -25,6 +25,7 @@ Table of contents:
     - [Version Control and Undoing Unwanted Changes](#version-control-and-undoing-unwanted-changes)
     - [Commands, Shortcuts \& Settings Cheatsheet](#commands-shortcuts--settings-cheatsheet)
   - [2. Key Features and Efficient Usage](#2-key-features-and-efficient-usage)
+    - [Prompt and Context Engineering](#prompt-and-context-engineering)
   - [3. Beyond Local CLI Usage](#3-beyond-local-cli-usage)
 
 ## 1. Getting Started
@@ -264,6 +265,20 @@ There are 2 other ways to restore a change:
 ![Cheatsheet](./assets/claude-code-cli-settings-cheat-sheet.jpg)
 
 ## 2. Key Features and Efficient Usage
+
+The course has an example project to try the different capabilities of Claude.
+That example project is the same as in [`../codex/example-app/`](../codex/example-app/), and the starter code can be found here: [starting-project.zip](https://github.com/academind/claude-code-course-resources/blob/main/code-snapshots/starting-project.zip).
+I won't use the example project.
+
+**Check [Anatomy of the .claude/ Folder](https://blog.dailydoseofds.com/p/anatomy-of-the-claude-folder)**.
+
+Image from that blog post:
+
+![Anatomy of the .claude folder](./anatomy_claude_folder.jpg)
+
+### Prompt and Context Engineering
+
+
 
 ## 3. Beyond Local CLI Usage
 
