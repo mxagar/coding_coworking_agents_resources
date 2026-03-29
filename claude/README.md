@@ -38,6 +38,9 @@ Table of contents:
     - [Key Information](#key-information)
     - [Code Examples](#code-examples)
     - [Skills](#skills)
+      - [Third Party Skills](#third-party-skills)
+    - [Images](#images)
+    - [Hooks](#hooks)
   - [3. Beyond Local CLI Usage](#3-beyond-local-cli-usage)
 
 ## 1. Getting Started
@@ -632,7 +635,72 @@ See the official Claude documentation for more details: [Extend Claude with skil
 Once the skills are defined, we can use them as follows:
 
 - We write a prompt which clearly requires a defined skill, and Claude should detect it by knowing the skill name and descriptions.
-- The skills appear as *slash commands* automatically, they are usually not thought to be invoked explicitly, though; 
+- The skills appear as *slash commands* automatically, but they are usually not thought to be invoked explicitly, instead, they are there so that Claude can use them. If we invoke them, they are executed as prompt templates or *custom commands*, and the output depends on the possible request in the skill definition &mdash; usually there's no request in a `SKILL.md`, but a guideline. If we write a request, though, it will be executed as a request prompt.
+- We could also mention/suggest using the skill in the prompt, if we want to be sure.
+
+There are some fields in the preamble which help skill usage:
+
+- `disable-model-invocation: true`: automatic discovery based on `title + description` off.
+- `user-invocable: false`: no *slash command* for the user.
+- `allowed-tools`: define [tools available](https://code.claude.com/docs/en/tools-reference); if not provided, all are available.
+
+We can also use the `$ARGUMENTS` placeholder; e.g., `.claude/skills/code-review/SKILL.md`:
+
+```markdown
+---
+name: code-review
+description: Review code for bugs, security or performance issues. Use this skill when asked to perform code reviews or after finishing major tasks or after refactoring code.
+allowed-tools: Read
+description: Perform a code-review
+---
+ 
+MODE: $ARGUMENTS
+ 
+If Mode is one of the following, adjust the review as described:
+ 
+- MODE == BUGS: Focus ONLY on logical or other bugs.
+- MODE == SECURITY: Focus ONLY on security issues.
+- MODE = PERFORMANCE: Focus ONLY performance issues.
+ 
+MODE can also be set to a combination like "BUGS,SECURITY" etc => Perform the combined review in that case.
+ 
+If MODE is set to anything else or nothing at all, perform a thorough, general code review.
+ 
+Perform an in-depth code review of the entire codebase.
+ 
+Carefully and thoroughly explore the codebase file-by-file to find potential issues and improvements.
+ 
+Don't rush it, instead make sure you fully understand the code structure and architecture.
+ 
+Create a detailed report of all your findings.
+```
+
+Then, we can explicitly invoke the skill as a *custom command* and pass the arguments:
+
+```text
+/code-review BUGS,SECURITY
+```
+
+#### Third Party Skills
+
+We can install skills from [https://skills.sh](https://skills.sh):
+
+```bash
+# Requires Node.js
+npx skills add <owner/repo>
+```
+
+### Images
+
+We can simply Copy & Paste and image to Claude.
+That's the section.
+
+### Hooks
+
+[Hooks](https://code.claude.com/docs/en/hooks)
+[Hook events](https://code.claude.com/docs/en/hooks#hook-events)
+
+![Hooks Lifecycle](./assets/hooks-lifecycle.svg)
 
 ## 3. Beyond Local CLI Usage
 
