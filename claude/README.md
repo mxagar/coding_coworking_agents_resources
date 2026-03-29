@@ -41,6 +41,10 @@ Table of contents:
       - [Third Party Skills](#third-party-skills)
     - [Images](#images)
     - [Hooks](#hooks)
+    - [Plugins](#plugins)
+    - [Feedback Loops with Browser Access and Automated Tests](#feedback-loops-with-browser-access-and-automated-tests)
+    - [Ralph Loop](#ralph-loop)
+    - [Claude Web / Cloud](#claude-web--cloud)
   - [3. Beyond Local CLI Usage](#3-beyond-local-cli-usage)
 
 ## 1. Getting Started
@@ -697,10 +701,167 @@ That's the section.
 
 ### Hooks
 
-[Hooks](https://code.claude.com/docs/en/hooks)
-[Hook events](https://code.claude.com/docs/en/hooks#hook-events)
+Hooks can run a prompt/command/agent whenever a well defined event occurs:
+
+- `PreToolUse`: right before any tool is to be used
+- `PostToolUse`: right after any tool has been used
+- ...
 
 ![Hooks Lifecycle](./assets/hooks-lifecycle.svg)
+
+Reference documentation:
+
+- [Claude Hooks](https://code.claude.com/docs/en/hooks)
+- [Claude Hook events](https://code.claude.com/docs/en/hooks#hook-events)
+
+We usually write them in any of the `settings.json` (global, project, local). Example: imagine we want to format any generated text/code every time it is generated; then, we add the following to `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && bun run format 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+We can also view and add hooks with `/hooks`.
+
+### Plugins
+
+Plugins are all additional capabilities of Claude Code:
+
+- Skills
+- MCP servers
+- etc.
+
+With `/plugin`:
+
+- We can see the installed plugins: MCP servers, skills, etc.
+- We can discover new plugins from added marketplaces (by default Anthropic's), and install them.
+- We can add new marketplaces.
+
+More information on how to officially [create plugins here](https://code.claude.com/docs/en/plugins).
+
+### Feedback Loops with Browser Access and Automated Tests
+
+Our goal is to be able to run a loop like *develop -> test -> fix/develop -> test -> ...*. To that end, Claude
+
+- needs to be able to *see* what it has done
+- and needs to be able to run tests on the codebase.
+
+Considering we're developing a web-based app, first, we need to install the [Playwright MCP](https://github.com/microsoft/playwright-mcp), which gives Claude Code browser access.
+
+Playwright opens a Chromium browser and gives access to it to Claude; we basically open the page we want and let Claude interact with it:
+
+- Go to URL
+- Capture screenshots
+- Refresh
+- Click on things
+- ...
+
+To install Playwright in Claude:
+
+```bash
+/plugin
+# Discover > Search for: Playwright
+```
+
+Then, to use it:
+
+```test
+Can you check how the app looks in the browser? Use the Playwright MCP to open http://localhost:3000 and check if the UI looks good? Click around and check if there are any errors in the console.
+```
+
+The first time, we might need to grant/allow permissions.
+
+We can (and should) also write and run tests for our code base.
+
+```text
+# Plan mode: SHIFT + TAB
+I have installed pytest. Set it up appropriately and add unit tests for all the features in this app. Add mocks ass needed and split complex functions up to simplify testing, if needed. Then run the tests, and if any of the doesn't pass, fix the codebase iteratively until all tests pass.
+```
+
+### Ralph Loop
+
+The Ralph Loop is named after the Simpson's character [Ralph Wiggum](https://en.wikipedia.org/wiki/Ralph_Wiggum) &mash; the character had a naive persistence.
+
+It works as follows:
+
+- We write the `SPEC.md`.
+- We derive from the `SPEC.md` a file which contains the steps or implementation jobs to achieve the goal: [`ralph/prd.json`](./ralph/prd.json). This file can be a JSON which contains the job items, where each job has a field `passes`, by default `false`, but `true` when implemented and tests pass.
+- We write a script which calls Claude in a loop; we pass the same prompt with all permissions but sandbox mode: pick a task from `prd.json`, implement it, test it successfully, and change the `passes` field to true when done: [`ralph/ralph.sh`](./ralph/ralph.sh).
+- A file will be generated/updated with the progress: [`ralph/agent-progress.txt`](./ralph/agent-progress.txt).
+- Claude runs until all tasks pass or we reach a maximum number of iterations (e.g., 20).
+
+Note that we need to run with `claude --dangerously-skip-permissions` and sandbox enabled via `.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "dangerouslySkipPermissions": true
+  },
+  "sandbox": {
+    "enabled": true
+  }
+}
+```
+
+Here's the Claude call in the loop with the prompt (from [`ralph/ralph.sh`](./ralph/ralph.sh)):
+
+```bash
+PROGRESS_FILE="agent-progress.txt"
+PRD_FILE="prd.json"
+
+claude --dangerously-skip-permissions -p "@$PRD_FILE @$PROGRESS_FILE @SPEC.MD @CLAUDE.md
+
+Pick ONE task from $PRD_FILE where passes=false. 
+
+You don't have to go in order - choose the best next task based on dependencies and what's already done. 
+
+Foundation work (db, auth) before UI. Risky integrations before routine work.
+
+Implement it following @CLAUDE.md guidelines. 
+
+Verify UI changes with Playwright MCP. 
+Run checks (bun run build, bun run lint, bun run test, bun run test:e2e).
+
+After each completed task:
+Mark passes=true in the prd.json file (for the completed task), update $PROGRESS_FILE, commit via Git.
+
+When ALL tasks have passes=true, output: <complete>ALL_TASKS_DONE</complete>
+"
+```
+
+If we want to see what it's doing, we open a new Claude:
+
+```bash
+claude -c  # Continue last session ;)
+```
+
+How does this work?
+
+- It can work for easy projects, MVPs, mockups. It created the course example app on its own!
+- It consumes many tokens.
+- We need to create a very good `SPEC.md`
+- We need to check the `prd.json` file carefully.
+- AI code quality can vary.
+- We have less control.
+- Claude can get stuck: we need to monitor the `agent-progress.txt`!
+- We need to have a good project setup: dependencies, skills, layout, `SPEC.md`, etc.
+
+### Claude Web / Cloud
+
+
 
 ## 3. Beyond Local CLI Usage
 

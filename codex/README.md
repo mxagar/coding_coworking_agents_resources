@@ -1443,6 +1443,7 @@ One way of achieving that is using the [Playwright MCP](https://github.com/micro
 
 Playwright opens a Chromium browser and gives access to it to Codex; we basically open the page we want and let Codex interact with it:
 
+- Go to URL
 - Capture screenshots
 - Refresh
 - Click on things
