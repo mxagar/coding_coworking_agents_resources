@@ -46,6 +46,10 @@ Table of contents:
     - [Ralph Loop](#ralph-loop)
     - [Claude Web / Cloud](#claude-web--cloud)
   - [3. Beyond Local CLI Usage](#3-beyond-local-cli-usage)
+    - [Claude Desktop App](#claude-desktop-app)
+    - [Dispatch](#dispatch)
+    - [Remote Control](#remote-control)
+    - [Scheduling Tasks](#scheduling-tasks)
 
 ## 1. Getting Started
 
@@ -803,6 +807,19 @@ It works as follows:
 - A file will be generated/updated with the progress: [`ralph/agent-progress.txt`](./ralph/agent-progress.txt).
 - Claude runs until all tasks pass or we reach a maximum number of iterations (e.g., 20).
 
+```bash
+# We put the files at the project root
+.claude/
+  ...
+SPEC.md
+prd.json
+ralph.sh
+agent-progress.txt
+CLAUDE.md
+src/
+  ...
+```
+
 Note that we need to run with `claude --dangerously-skip-permissions` and sandbox enabled via `.claude/settings.json`:
 
 ```json
@@ -861,8 +878,90 @@ How does this work?
 
 ### Claude Web / Cloud
 
+Claude runs locally using the Anthropic APIs. However, we can run it also on the cloud, provided we
 
+- connect our Github
+- and define a cloud environment:
+  - Name
+  - Network access: Trusted
+  - Environment variables
+  - Setup script: `pip install -r requirements.txt`, etc.
+
+Claude Code Cloud: [https://claude.ai/code/](https://claude.ai/code/).
+
+Then, we connect a repo and we can prompt Claude to work on it.
+Changes in the cloud end up being Github Pull Requests.
+We can select also `Cloud` instead of `Local` in the Claude App, too.
+If the `Cloud` execution is selected, even though we are using the CLI/IDE/App, the execution happens in the Cloud.
+
+We can send stuff to run on the cloud via the CLI:
+
+```bash
+# First, we need to select a cloud env
+claude
+/remote-env
+
+# Then, we can launch a job on the cloud with &
+# Usually, first we plan something locally with plan mode (SHIFT + TAB)
+# Then, in the next prompt we send the task to the cloud
+& Do XYZ
+# And we can create a new task in the cloud with another prompt!
+& Do ABC  # This is another decoupled cloud task!
+# Check https://claude.ai/code/ for cloud-running tasks
+
+# We can also launch Clause tasks on the cloud from the CLI as follows
+claude --remote "Do ABC"
+# Check https://claude.ai/code/ for cloud-running tasks
+```
 
 ## 3. Beyond Local CLI Usage
 
+### Claude Desktop App
 
+It is a similar interface to the CLI, but has extra features:
+
+- We can start Worktrees automatically
+- We have a preview button, which opens a browser tab
+- etc.
+
+Check the Settings and configure the app:
+
+- Github connection
+- Chrome connection: Claude can use our browser.
+- ...
+
+### Dispatch
+
+Claude Dispatch: We connect/link our Desktop Claude App to the Phone App.
+Then, we can control our Desktop Claude App from our Phone!
+However, it is not automatically linked to a project/sessions; we need to prompt it to go there.
+When configuring it, we need to set our computer to be awake all the time.
+Note that we can connect our Phone and a VPS, not only our computer...
+
+### Remote Control
+
+This is like Dispatch, but we connect to specific sessions/projects, i.e., we continue on our Phone on existing/running sessions.
+
+To use it:
+
+```bash
+claude remote-control
+
+# We select if we want to work in same folder or with worktrees
+```
+
+### Scheduling Tasks
+
+Scheduled tasks are jobs that run on a given date & time, and with a frequency.
+
+We can define them in the Claude App or with `/schedule`.
+
+Examples (suggested in the `/schedule` *slash command*):
+
+- Run tests
+- Write reports from logs
+- ...
+
+Scheduled tasks run on the cloud if run form the CLI; the ones from the App can also run locally.
+
+We are not limited to code tasks! We can schedule anything!
