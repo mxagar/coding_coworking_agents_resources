@@ -34,6 +34,10 @@ Table of contents:
     - [Web Information](#web-information)
     - [Model Context Protocol (MCP) Servers](#model-context-protocol-mcp-servers)
     - [Subagents](#subagents)
+  - [{Library Name}](#library-name)
+    - [Key Information](#key-information)
+    - [Code Examples](#code-examples)
+    - [Skills](#skills)
   - [3. Beyond Local CLI Usage](#3-beyond-local-cli-usage)
 
 ## 1. Getting Started
@@ -282,7 +286,7 @@ I won't use the example project.
 
 Image from that blog post:
 
-![Anatomy of the .claude folder](./anatomy_claude_folder.jpg)
+![Anatomy of the .claude folder](./assets/anatomy_claude_folder.jpg)
 
 ### SPEC File
 
@@ -466,6 +470,169 @@ Use the context7 MCP to find teh relevant documentation on better-auth
 ```
 
 ### Subagents
+
+Claude has out-of-the-box subagents, which are automatically spawn when we request something; for instance the `Explore()` subagent. We can see how these subagents perform tasks in parallel in the CLI, because they output concurrent streams. Then, when a subagent finishes, its outputs are integrated to the context.
+
+We can also create custom subagents. It make sense to create subagents when their tasks are modular/independent, and they can work without polluting the main thread's context! That's the key idea: a new sub-session is launched for the subagents and our main session context is not bloated.
+
+To create a subagent, we place a Markdown with the agent description in `.claude/agents` or `~/.claude/agents`:
+
+```bash
+# Local project
+.claude/
+  agents/
+    DocsExplorer.md  # Agent description
+
+# Global: available to all projects
+~/.claude/
+  agents/
+    DocsExplorer.md  # Agent description
+```
+
+The file [`DocsExplorer.md`](https://github.com/academind/claude-code-course-resources/blob/main/other/subagent/DocsExplorer.md) has a preamble with specific properties:
+
+- name: Same as the MD file
+- description: very important, Claude decides to spawn the subagent based on this description
+- [tools](https://code.claude.com/docs/en/tools-reference): we provide the subagent with available tools; don't forget `MCPSearch`
+- model: opus / sonnet / haiku; depending on the complexity of the task
+
+And then, the content is a regular MD similar to this:
+
+```markdown
+---
+name: DocsExplorer
+description: Documentation lookup specialist. Use proactively when needing docs for any library, framework, or technology. Fetches docs in parallel for multiple technologies.
+tools: WebFetch, WebSearch, Skill, MCPSearch
+model: sonnet
+---
+
+You are a documentation specialist that fetches up-to-date docs for libraries, frameworks, and technologies. Your goal is to provide accurate, relevant documentation quickly.
+
+## Workflow
+
+When given one or more technologies/libraries to look up:
+
+1. **Execute ALL lookups in parallel** - batch your tool calls for maximum speed
+2. **Use Context7 MCP as primary source** - it has high-quality, LLM-optimized docs
+3. **Fall back to web search** when Context7 lacks coverage
+4. **Prefer machine-readable formats** - llms.txt and .md files over HTML pages
+
+## Lookup Strategy
+
+### Step 1: Context7 MCP (Primary)
+
+For each library, call these in sequence:
+
+1. `mcp_Context7_resolve-library-id` with the library name to get the Context7 ID
+2. `mcp_Context7_query-docs` with the resolved ID and specific query
+
+Run Step 1 for ALL libraries in parallel.
+
+### Step 2: Web Fallback (If Context7 fails or lacks info)
+
+If Context7 doesn't have the library or lacks specific info:
+
+1. **Search for LLM-friendly docs first:**
+   - Search: `{library} llms.txt site:{official-docs-domain}`
+   - Search: `{library} documentation llms.txt`
+
+2. **Try known llms.txt paths:**
+   - Navigate to `{docs-base-url}/llms.txt`
+   - Navigate to `{docs-base-url}/docs/llms.txt`
+   - Navigate to `{docs-base-url}/llms-full.txt`
+
+3. **Try .md documentation paths:**
+   - Search: `{library} {topic} filetype:md site:github.com`
+   - Navigate to `{docs-base-url}/docs/{topic}.md`
+   - Navigate to `{docs-base-url}/{topic}.md`
+
+4. **Final fallback - fetch normal page:**
+   - If no llms.txt or .md found, navigate to the official docs page
+   - Use browser_snapshot to extract content
+
+## Parallel Execution Rules
+
+- When looking up multiple libraries, start ALL Context7 resolve-library-id calls simultaneously
+- After resolving IDs, batch all query-docs calls together
+- For web fallback, batch navigate calls for different libraries
+- Never wait for one library lookup to complete before starting another
+
+## Output Format
+
+For each library/technology, provide:
+
+```
+## {Library Name}
+
+**Source:** {Context7 | URL}
+
+### Key Information
+{Relevant docs content, API references, examples}
+
+### Code Examples
+{Practical code snippets from the docs}
+```
+```
+
+If we consider a subagent is very important, we can mention it in the `CLAUDE.md`:
+
+```text
+Whenever working with any third-party library or something similar, you MUST look up the official documentation to ensure that you're working with up-to-date information.
+Use the DocsExplorer subagent for efficient documentation lookup.
+```
+
+### Skills
+
+Agent skills are already a standard: [Agent Skills Standard](https://agentskills.io/home).
+
+![Skills](./assets/skills.png)
+
+The standard defines a folder structure for skills, which is the following:
+
+```bash
+# Local project
+.claude/skills/
+    <skill-name>/
+    ├── SKILL.md          # Required: instructions + metadata
+    ├── scripts/          # Optional: executable code
+    ├── references/       # Optional: documentation
+    └── assets/           # Optional: templates, resources
+
+# Glocal: skills should be maybe project-specific though?
+~/.claude/skills/
+    <skill-name>/
+    ├── SKILL.md          # Required: instructions + metadata
+    ├── scripts/          # Optional: executable code
+    ├── references/       # Optional: documentation
+    └── assets/           # Optional: templates, resources
+```
+
+Note: that's not the standard; Codex and other frameworks also allow defining the skills inside the `.agents/skills/` folder for compatibility with other agentic frameworks.
+
+In any case, as we see, a skill is basically defined in a `SKILL.md` file inside its `<skill-name>/` folder. Then, we can optionally add scripts, references, and assets.
+
+We could write in the `CLAUDE.md` file the skill description, but `CLAUDE.md` could become huge and it is loaded every time taking space in the context.
+**The main idea with `SKILL.md` is that the files are LAZY-loaded, i.e., they are loaded only when needed!**
+That way `CLAUDE.md` is kept lean and contains only general at all times **relevant** knowledge.
+
+> Skills use progressive disclosure to manage context efficiently:
+> - Discovery: At startup, agents load only the name and description of each available skill, just enough to know when it might be relevant.
+> - Activation: When a task matches a skill’s description, the agent reads the full SKILL.md instructions into context.
+> - Execution: The agent follows the instructions, optionally loading referenced files or executing bundled code as needed.
+> This approach keeps agents fast while giving them access to more context on demand.
+
+The `SKILL.md`:
+
+- It contains a preamble with the important fields `name` and `description`.
+- Inside the body text, we can make reference to a `reference/ref-doc.md` file, if more information should be consulted; this will be loaded if needed.
+- Look at the examples in [`.claude/skills/`](.claude/skills/).
+
+See the official Claude documentation for more details: [Extend Claude with skills](https://code.claude.com/docs/en/skills)
+
+Once the skills are defined, we can use them as follows:
+
+- We write a prompt which clearly requires a defined skill, and Claude should detect it by knowing the skill name and descriptions.
+- The skills appear as *slash commands* automatically, they are usually not thought to be invoked explicitly, though; 
 
 ## 3. Beyond Local CLI Usage
 

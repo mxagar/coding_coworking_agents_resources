@@ -1256,7 +1256,7 @@ The standard defines a folder structure for skills, which is the following:
     └── assets/           # Optional: templates, resources
 ```
 
-Note: that's the standard; codex also allows defining the skills inside the `.codex/skills/` folder, but it is recommended to use the `.agents/skills/` folder for compatibility with other agentic frameworks and tools (e.g., Claude, Cursor, etc.).
+Note: that's the standard; codex also allows defining the skills inside the `.codex/skills/` folder, but it is recommended to use the `.agents/skills/` folder for compatibility with other agentic frameworks and tools (e.g., Cursor, etc.).
 
 As we see, a skill is basically defined in a `SKILL.md` file inside its `<skill-name>/` folder. Then, we can optionally add scripts, references, and assets.
 
