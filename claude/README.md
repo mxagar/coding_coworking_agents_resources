@@ -12,6 +12,7 @@ These are the sources I have used:
 - [Claude Code Common Workflows](https://code.claude.com/docs/en/common-workflows)
 - [Claude API Quickstarts](https://github.com/anthropics/claude-quickstarts/tree/main)
 - [Building with the Claude API](https://anthropic.skilljar.com/claude-with-the-anthropic-api)
+- [github/luongnv89/claude-howto](https://github.com/luongnv89/claude-howto)
 
 Table of contents:
 

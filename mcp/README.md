@@ -1,8 +1,33 @@
 # Model Context Protocol (MCP)
 
-[Udemy: MCP Crash Course: Complete Model Context Protocol in a Day (Eden Marco)](https://www.udemy.com/course/model-context-protocol/)
+This is a collection of notes on the Model Context Protocol (MCP), a protocol for connecting AI models to external tools and data sources. MCP allows AI agents to access a wide range of capabilities and information, enabling them to perform complex tasks and make informed decisions.
 
-[Udemy: Learn MCP - Model Context Protocol Complete Guide](https://www.udemy.com/course/learn-mcp-model-context-protocol-complete-guide/)
+Courses and resources on MCP:
+
+- [Udemy: Intro to MCP - Model Context Protocol (Claude)](https://www.udemy.com/course/intro-to-mcp-model-context-protocol-claude/)
+- [FastMCP](https://gofastmcp.com/getting-started/welcome)
+- [Udemy: MCP Crash Course: Complete Model Context Protocol in a Day (Eden Marco)](https://www.udemy.com/course/model-context-protocol/)
+- [Udemy: Learn MCP - Model Context Protocol Complete Guide](https://www.udemy.com/course/learn-mcp-model-context-protocol-complete-guide/)
+- [Docker Just Made Using MCP Servers 100x Easier (One Click Installs!)](https://www.youtube.com/watch?v=TxlVdB2gmGE)
+
+Table of Contents:
+
+- [Model Context Protocol (MCP)](#model-context-protocol-mcp)
+  - [Introduction to MCP](#introduction-to-mcp)
+  - [FastMCP](#fastmcp)
+  - [Docker MCP Toolkit](#docker-mcp-toolkit)
+
+## Introduction to MCP
+
+Most of the content in this section is sourced from the following course:
+
+[Udemy: Intro to MCP - Model Context Protocol (Claude)](https://www.udemy.com/course/intro-to-mcp-model-context-protocol-claude/)
+
+TBD.
+
+## FastMCP
+
+Source: [FastMCP](https://gofastmcp.com/getting-started/welcome)
 
 TBD.
 

@@ -4,12 +4,12 @@ This project contains resources related to coding and co-working agents.
 
 Each subdirectory contains a README file with specific information about the resources and guides related to that particular agent framework or topic.
 
-- [`codex/`](./codex/)
 - [`claude/`](./claude/)
+- [`codex/`](./codex/)
+- [`opencode/`](./opencode/)
 - [`mcp/`](./mcp/)
-- [`n8n/`](./n8n/)
-- [`open_claw/`](./open_claw/)
-- [`openai`](./openai)
+- [`openai_api/`](./openai_api)
+- [`anthropic_api/`](./anthropic_api/)
 
 ## Collection of Other Resources
 
@@ -35,6 +35,13 @@ pip-sync requirements.txt
 # And then:
 pip-compile requirements.in
 pip-sync requirements.txt
+```
+
+The environment variables are stored in the `.env` file, which is ignored by git. You can create a `.env` file with the necessary environment variables for your setup.
+
+```bash
+OPENAI_API_KEY=your_openai_api_key
+ANTHROPIC_API_KEY=your_anthropic_api_key
 ```
 
 ## Authorship
