@@ -34,9 +34,6 @@ Table of contents:
     - [Web Information](#web-information)
     - [Model Context Protocol (MCP) Servers](#model-context-protocol-mcp-servers)
     - [Subagents](#subagents)
-  - [{Library Name}](#library-name)
-    - [Key Information](#key-information)
-    - [Code Examples](#code-examples)
     - [Skills](#skills)
       - [Third Party Skills](#third-party-skills)
     - [Images](#images)
@@ -572,7 +569,7 @@ If Context7 doesn't have the library or lacks specific info:
 
 For each library/technology, provide:
 
-```
+```text
 ## {Library Name}
 
 **Source:** {Context7 | URL}
