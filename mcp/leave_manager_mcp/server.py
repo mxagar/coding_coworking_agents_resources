@@ -24,7 +24,7 @@ DB_FILE = pathlib.Path(__file__).parent / "leave_manager.db"
 
 # Create an MCP server
 # mcp = FastMCP("Demo", json_response=True) # Default port is 8000, specify a different port if needed
-mcp = FastMCP("LeaveManager", json_response=True, port=8001)
+mcp = FastMCP("LeaveManager", json_response=True, port=8002)
 
 
 # Data models
@@ -562,4 +562,4 @@ def add_employee(
 if __name__ == "__main__":
     # Initialize database when server starts
     init_database()
-    mcp.run()
+    mcp.run(transport="streamable-http")

@@ -34,8 +34,10 @@ Table of Contents:
     - [Example: Leave Management MCP Server](#example-leave-management-mcp-server)
       - [Setup](#setup-1)
       - [Server Code](#server-code-1)
+        - [Running the server](#running-the-server-1)
+        - [Install the Server Tool in the Client](#install-the-server-tool-in-the-client-1)
+        - [Test the tool in the client](#test-the-tool-in-the-client-1)
     - [Example: Project Management MCP Server](#example-project-management-mcp-server)
-  - [FastMCP](#fastmcp)
   - [Docker MCP Toolkit](#docker-mcp-toolkit)
 
 ## Introduction to MCP
@@ -305,9 +307,22 @@ if __name__ == "__main__":
 
 ```bash
 cd calculator_mcp
+
+# Activate the venv
+source .venv/bin/activate  # macOS / Linux / WSL
+.venv\Scripts\Activate.ps1  # Windows (PowerShell)
+
+# Run the server
 uv run server.py
 
-# Without uv, we would activate the venv and run
+# Optional: Run in dev with MCP Inspector
+# A dashboard is deployed under
+# http://localhost:6274
+# (exact URL provided in CLI)
+uv run mcp dev server.py
+
+# If we want to run without uv, 
+# we would activate the venv and run
 python server.py
 ```
 
@@ -322,6 +337,9 @@ claude mcp add --transport http calculator-server http://localhost:8001/mcp
 # in .claude/settings.json
 # add the server with --scope project
 claude mcp add --transport http --scope project calculator-server http://localhost:8001/mcp
+
+# To remove it
+claude mcp remove calculator-server
 ```
 
 ##### Test the tool in the client
@@ -418,21 +436,146 @@ touch server.py
 
 #### Server Code
 
-File: [leave_manager_mcp/server.py](./leave_manager_mcp/server.py)
+Check the file [leave_manager_mcp/server.py](./leave_manager_mcp/server.py)
 
-```python
+The FastMCP code is very similar to the calculator example.
+The main difference is that here we create a DB and we interact with it.
+
+Summary of the contents:
+
+- A SQLite database is initialized with employee and leave request data; the data models are defined.
+  - `Employee` and `LeaveRequest`
+- Auxiliary functions are created to interact with the database:
+  - `get_db_connection`, `init_database`
+  - `load_employees`
+  - `load_leave_requests`
+  - `get_employee_by_id`, `get_employee_by_name`
+  - `find_similar_employees`
+- MCP resources are defined:
+  - `get_all_employees` <-> `employees://all`
+  - `get_employee_info` <-> `employee://{employee_id}`
+  - `get_all_leave_requests` <-> `leave-requests://all`
+  - `get_employee_leave_requests` <-> `leave-requests://employee/{employee_id}`
+  - `get_requests_by_status` <-> `leave-requests://status/{status}`
+- MCP tools are defined:
+  - `submit_leave_request`
+  - `approve_leave_request`
+  - `check_leave_balance`
+  - `get_pending_approvals`
+  - `get_database_stats`
+  - `add_employee`
+ 
+##### Running the server
+
+Note that the port must be different to any other server, even though other servers are not running.
+Also, note that we can deploy in two ways:
+
+- `uv run server.py` which will deploy the server without the MCP Inspector dashboard, it's thought for production deployments. The port is specified in the code (8002 in this case).
+- `uv run mcp dev server.py` which will deploy the server with the MCP Inspector dashboard, thought for development and debugging. The port is different (6274) and the CLI will show the exact URL after deployment. 
+
+```bash
+cd leave_manager_mcp
+
+# Activate the venv
+source .venv/bin/activate  # macOS / Linux / WSL
+.venv\Scripts\Activate.ps1  # Windows (PowerShell)
+
+# Run the server
+# This should deploy the server on http://localhost:8001/mcp
+# or the port specified in the code
+uv run server.py
+
+# Optional: Run in dev with MCP Inspector
+# Deployment under
+# http://localhost:6274
+# (exact URL provided in CLI)
+# We have a dashboard we can interact with
+uv run mcp dev server.py
+
+# If we want to run without uv, 
+# we would activate the venv and run
+python server.py
 ```
 
+If we deploy the server with the `uv run mcp dev server.py` command, we can also access the MCP Inspector dashboard, which allows us to inspect the server, its tools, resources, prompts, and sampling in real time, opening the URL in the brower.
+
+![MCP Inspector](./assets/mcp_inspector.png)
+
+In the MCP Inspector, we can click on the `Server Entry` button and we get the `mcp.json` config that would be added on the client side to connect to this server, e.g.:
+
+```json
+{
+    "command": "uv",
+    "args": [
+        "run",
+        "--with",
+        "mcp",
+        "mcp",
+        "run",
+        "server.py"
+    ],
+    "env": {
+        "APPDATA": "...",
+        //...
+    }
+}
+```
+
+##### Install the Server Tool in the Client
+
+```bash
+# Example for Claude Desktop client, Port 8002
+# and installed globally to ~/.claude/settings.json
+claude mcp add leave-manager-server http://localhost:8002/mcp
+
+# To install locally to project
+# in .claude/settings.json
+# add the server with --scope project
+claude mcp add --scope project leave-manager-server http://localhost:8002/mcp
+
+# To remove it
+claude mcp remove leave-manager-server
+```
+
+##### Test the tool in the client
+
+```bash
+# If we are in a corporate network with a proxy, set the env variable to bypass the proxy for localhost
+$env:NO_PROXY="localhost,127.0.0.1"
+
+claude
+/mcp
+# Our MCP should appear connected under local MCPs
+# leave-manager-server · ✔ connected
+
+# Send prompt
+How many employees are there? Use the leave-manager-server MCP.
+# ... 5
+Tell me info of all 5 employees
+# ...
+#   ┌────────┬───────────────┬─────────────┬────────────┬──────────────┬────────────┐           
+#   │   ID   │     Name      │ Department  │  Manager   │ Annual Leave │ Sick Leave │           
+#   ├────────┼───────────────┼─────────────┼────────────┼──────────────┼────────────┤           
+#   │ EMP001 │ John Smith    │ Engineering │ Jane Doe   │ 25 days      │ 10 days    │           
+#   ├────────┼───────────────┼─────────────┼────────────┼──────────────┼────────────┤           
+#   │ EMP002 │ Alice Johnson │ Marketing   │ Bob Wilson │ 20 days      │ 10 days    │           
+#   ├────────┼───────────────┼─────────────┼────────────┼──────────────┼────────────┤
+#   │ EMP003 │ Bob Wilson    │ Marketing   │ Jane Doe   │ 25 days      │ 10 days    │           
+#   ├────────┼───────────────┼─────────────┼────────────┼──────────────┼────────────┤
+#   │ EMP004 │ Sarah Davis   │ HR          │ Jane Doe   │ 22 days      │ 11 days    │
+#   ├────────┼───────────────┼─────────────┼────────────┼──────────────┼────────────┤
+#   │ EMP005 │ Nick Chen     │ Engineering │ John Smith │ 18 days      │ 10 days    │
+#   └────────┴───────────────┴─────────────┴────────────┴──────────────┴────────────┘
+
+```
 
 ### Example: Project Management MCP Server
 
+I skip the explanation, since the example is analogous to the Leave Management MCP Server, but with a different domain and different tools/resources.
 
+Check the code here:
 
-## FastMCP
-
-Source: [FastMCP](https://gofastmcp.com/getting-started/welcome)
-
-TBD.
+[Project Management MCP Server](./project_management_server/server.py)
 
 ## Docker MCP Toolkit
 
