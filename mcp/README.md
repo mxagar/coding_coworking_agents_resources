@@ -24,19 +24,19 @@ Table of Contents:
       - [Sampling](#sampling)
       - [Summary](#summary)
     - [Example: First MCP Setup - Calculator MCP Server](#example-first-mcp-setup---calculator-mcp-server)
-        - [Tools](#tools-1)
-        - [Setup](#setup)
-        - [Server Code](#server-code)
-        - [Running the server](#running-the-server)
-        - [Install the Server Tool in the Client](#install-the-server-tool-in-the-client)
-        - [Test the tool in the client](#test-the-tool-in-the-client)
-        - [Uninstalling and Managing the Server Tool in the Client](#uninstalling-and-managing-the-server-tool-in-the-client)
+      - [Tools](#tools-1)
+      - [Setup](#setup)
+      - [Server Code](#server-code)
+      - [Running the server](#running-the-server)
+      - [Install the Server Tool in the Client](#install-the-server-tool-in-the-client)
+      - [Test the tool in the client](#test-the-tool-in-the-client)
+      - [Uninstalling and Managing the Server Tool in the Client](#uninstalling-and-managing-the-server-tool-in-the-client)
     - [Example: Leave Management MCP Server](#example-leave-management-mcp-server)
       - [Setup](#setup-1)
       - [Server Code](#server-code-1)
-        - [Running the server](#running-the-server-1)
-        - [Install the Server Tool in the Client](#install-the-server-tool-in-the-client-1)
-        - [Test the tool in the client](#test-the-tool-in-the-client-1)
+      - [Running the server](#running-the-server-1)
+      - [Install the Server Tool in the Client](#install-the-server-tool-in-the-client-1)
+      - [Test the tool in the client](#test-the-tool-in-the-client-1)
     - [Example: Project Management MCP Server](#example-project-management-mcp-server)
   - [Docker MCP Toolkit](#docker-mcp-toolkit)
 
@@ -218,12 +218,12 @@ async def ai_summarize(text: str, ctx: Context) -> str:
 
 ### Example: First MCP Setup - Calculator MCP Server
 
-##### Tools
+#### Tools
 
 - IDE, Python, [`uv`](https://docs.astral.sh/uv/#installation)
 - Library: [mcp](https://pypi.org/project/mcp/)
 
-##### Setup
+#### Setup
 
 ```bash
 # Create a python project with uv
@@ -247,7 +247,7 @@ touch server.py
 # Then, add the code below
 ```
 
-##### Server Code
+#### Server Code
 
 File: [calculator_mcp/server.py](./calculator_mcp/server.py).  
 Important: by default, the server will run on port 8000.  
@@ -303,7 +303,7 @@ if __name__ == "__main__":
 
 ```
 
-##### Running the server
+#### Running the server
 
 ```bash
 cd calculator_mcp
@@ -326,7 +326,7 @@ uv run mcp dev server.py
 python server.py
 ```
 
-##### Install the Server Tool in the Client
+#### Install the Server Tool in the Client
 
 ```bash
 # Example for Claude Desktop client, Port 8001
@@ -342,7 +342,7 @@ claude mcp add --transport http --scope project calculator-server http://localho
 claude mcp remove calculator-server
 ```
 
-##### Test the tool in the client
+#### Test the tool in the client
 
 ```bash
 # If we are in a corporate network with a proxy, set the env variable to bypass the proxy for localhost
@@ -363,7 +363,7 @@ claude
 # 679238462736539 + 28346453836365 = 707,584,916,572,904
 ```
 
-##### Uninstalling and Managing the Server Tool in the Client
+#### Uninstalling and Managing the Server Tool in the Client
 
 Notes:
 
@@ -465,7 +465,7 @@ Summary of the contents:
   - `get_database_stats`
   - `add_employee`
  
-##### Running the server
+#### Running the server
 
 Note that the port must be different to any other server, even though other servers are not running.
 Also, note that we can deploy in two ways:
@@ -521,7 +521,7 @@ In the MCP Inspector, we can click on the `Server Entry` button and we get the `
 }
 ```
 
-##### Install the Server Tool in the Client
+#### Install the Server Tool in the Client
 
 ```bash
 # Example for Claude Desktop client, Port 8002
@@ -537,7 +537,7 @@ claude mcp add --scope project leave-manager-server http://localhost:8002/mcp
 claude mcp remove leave-manager-server
 ```
 
-##### Test the tool in the client
+#### Test the tool in the client
 
 ```bash
 # If we are in a corporate network with a proxy, set the env variable to bypass the proxy for localhost
