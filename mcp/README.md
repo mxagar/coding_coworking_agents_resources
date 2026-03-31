@@ -17,8 +17,14 @@ Table of Contents:
     - [MCP Architecture](#mcp-architecture)
       - [How the Pieces Relate](#how-the-pieces-relate)
       - [GitHub MCP Example](#github-mcp-example)
-    - [Example: Calculartor MCP Server](#example-calculartor-mcp-server)
-        - [Tools](#tools)
+    - [Quick FastMCP Implementation Concepts](#quick-fastmcp-implementation-concepts)
+      - [Tools](#tools)
+      - [Resources](#resources)
+      - [Prompts](#prompts)
+      - [Sampling](#sampling)
+      - [Summary](#summary)
+    - [Example: First MCP Setup - Calculator MCP Server](#example-first-mcp-setup---calculator-mcp-server)
+        - [Tools](#tools-1)
         - [Setup](#setup)
         - [Server Code](#server-code)
         - [Running the server](#running-the-server)
@@ -26,6 +32,8 @@ Table of Contents:
         - [Test the tool in the client](#test-the-tool-in-the-client)
         - [Uninstalling and Managing the Server Tool in the Client](#uninstalling-and-managing-the-server-tool-in-the-client)
     - [Example: Leave Management MCP Server](#example-leave-management-mcp-server)
+      - [Setup](#setup-1)
+      - [Server Code](#server-code-1)
     - [Example: Project Management MCP Server](#example-project-management-mcp-server)
   - [FastMCP](#fastmcp)
   - [Docker MCP Toolkit](#docker-mcp-toolkit)
@@ -35,6 +43,8 @@ Table of Contents:
 Most of the content in this section is sourced from the following course:
 
 [Udemy: Intro to MCP - Model Context Protocol (Claude)](https://www.udemy.com/course/intro-to-mcp-model-context-protocol-claude/)
+
+The course repository: [GitHub MCP Projects](https://github.com/whyashthakker/mcp-projects)
 
 Relevant sources:
 
@@ -110,11 +120,12 @@ graph TD
 
 **MCP Protocol <-> Server** -- Before any real work happens, the two sides exchange a **capability negotiation** handshake. The server declares which of its four capability types it supports; the client learns exactly what it can ask for. This makes the protocol extensible without breaking older implementations.
 
-**Server -> Tools / Resources / Prompts / Sampling** -- A server exposes up to four capability classes:
-- **Tools** -- callable functions the model can invoke (e.g. `create_issue`, `search_code`).
-- **Resources** -- read-only data sources the model can pull into context (e.g. a file, a DB row).
-- **Prompts** -- reusable prompt templates parameterised by the server.
-- **Sampling** -- lets the server ask the *client's* LLM to generate text (server-side orchestration).
+**Server -> Tools / Resources / Prompts / Sampling** -- A server exposes up to four capability classes. Three of them (Tools, Resources, Prompts) are declared with Python decorators and respond to requests *from* the client. Sampling is the exception: it has no decorator and works in the opposite direction — the server calls back into the client's LLM.
+
+- **Tools** -- callable functions the model can invoke to perform actions or computations (e.g. `create_issue`, `search_code`). Declared with `@mcp.tool()`. Direction: client --> server.
+- **Resources** -- read-only data the model can pull into context (e.g. a file, a DB row). Declared with `@mcp.resource("uri://pattern")`. Direction: client --> server.
+- **Prompts** -- reusable prompt templates the client can request and inject into the conversation. Declared with `@mcp.prompt()`. Direction: client --> server.
+- **Sampling** -- lets the server ask the *client's* LLM to generate text. No decorator; invoked from inside a tool or resource via `await ctx.sample(...)`. Direction: server --> client.
 
 **Server <-> External Systems** -- Tools and Resources are the bridge to the real world -- REST APIs, databases, file systems, cloud services.
 
@@ -129,9 +140,81 @@ Claude Desktop (Client) -- JSON-RPC --> github-mcp-server (MCP Server) -- REST -
 3. The **GitHub MCP Server** receives it, authenticates with a stored token, and calls `POST /repos/{owner}/{repo}/issues` against the GitHub REST API.
 4. GitHub returns the new issue URL -> the server wraps it in a JSON-RPC **Response** -> Claude reads it and tells you: *"Done! Issue #42 is open."*
 
-Other tools the GitHub MCP server typically exposes: `list_repos`, `get_file_contents`, `create_pull_request`, `search_code`, `list_commits` -- all following the exact same Client -> Protocol -> Server -> External flow.
+Other tools the GitHub MCP server typically exposes: `list_repos`, `get_file_contents`, `create_pull_request`, `search_code`, `list_commits` -- all following the exact same Client --> Protocol --> Server --> External flow.
 
-### Example: Calculartor MCP Server
+### Quick FastMCP Implementation Concepts
+
+All four capability types are implemented as plain Python functions. The key differences are the decorator used and the direction of the call.
+
+#### Tools
+
+Invoked by the client to perform an action. Can read and write state. Returns a result to the client.
+
+```python
+@mcp.tool()
+def add(a: int, b: int) -> int:
+    """Add two numbers."""
+    return a + b
+```
+
+#### Resources
+
+Invoked by the client to read data. Semantically read-only. The URI pattern can include path parameters.
+
+```python
+# @mcp.resource("uri://{param}")
+@mcp.resource("employee://{employee_id}")
+def get_employee(employee_id: str) -> str:
+    """Return employee info as a string."""
+    return f"Employee {employee_id}: ..."
+```
+
+The URI string can be chosen arbitrarily.
+The parameter(s) (which are optional) are parsed and passed as arguments to the function. The URI can also be path-like with multiple parameters, or no parameters at all.
+
+```python
+@mcp.resource("employees://all")          # static
+@mcp.resource("employee://{id}")          # one param
+@mcp.resource("dept://{dept}/team/{id}")  # multiple params
+@mcp.resource("config://app/settings")   # path-like, no params
+@mcp.resource("report://{year}/{month}") # date-style params
+```
+
+#### Prompts
+
+Invoked by the client to get a prompt template. Returns a string (or list of messages) that the client injects into the conversation.
+
+```python
+@mcp.prompt()
+def summarize(text: str) -> str:
+    """Prompt template for summarization."""
+    return f"Summarize the following in one sentence:\n\n{text}"
+```
+
+#### Sampling
+
+The server calls *out* to the client's LLM from inside a tool or resource. Requires the `Context` object as a parameter (FastMCP injects it automatically) and an `async` function.
+
+```python
+from mcp.server.fastmcp import FastMCP, Context
+
+@mcp.tool()
+async def ai_summarize(text: str, ctx: Context) -> str:
+    """Uses the client's LLM to summarize the text."""
+    result = await ctx.sample(f"Summarize in one sentence: {text}")
+    return result.text
+```
+
+#### Summary
+
+| Capability | Decorator | Direction | Can modify state |
+|---|---|---|---|
+| Tool | `@mcp.tool()` | client --> server | yes |
+| Resource | `@mcp.resource("uri")` | client --> server | no (read-only) |
+| Prompt | `@mcp.prompt()` | client --> server | no (templates only) |
+| Sampling | none (`ctx.sample()`) | server --> client | n/a |
+
+### Example: First MCP Setup - Calculator MCP Server
 
 ##### Tools
 
@@ -172,33 +255,34 @@ If the port is already in use, we can specify a different port when creating the
 """
 FastMCP quickstart example.
 
-Run from the repository root:
-    uv run examples/snippets/servers/fastmcp_quickstart.py
+Run:
+    cd calculator_mcp
+    uv run server.py
 """
 
 from mcp.server.fastmcp import FastMCP
 
 
 # Create an MCP server
-# mcp = FastMCP("Demo", json_response=True) # Default port is 8000, specify a different port if needed
-mcp = FastMCP("Demo", json_response=True, port=8001)
+# mcp = FastMCP("Calculator", json_response=True) # Default port is 8000, specify a different port if needed
+mcp = FastMCP("Calculator", json_response=True, port=8001)
 
 
-# Add an addition tool
+# Tool: function that can be called by the client (can modify state/write data)
 @mcp.tool()
 def add(a: int, b: int) -> int:
     """Add two numbers"""
     return a + b
 
 
-# Add a dynamic greeting resource
+# Resource: read-only data that can be accessed by agents, tools, or users
 @mcp.resource("greeting://{name}")
 def get_greeting(name: str) -> str:
     """Get a personalized greeting"""
     return f"Hello, {name}!"
 
 
-# Add a prompt
+# Prompt: template for generating prompts
 @mcp.prompt()
 def greet_user(name: str, style: str = "friendly") -> str:
     """Generate a greeting prompt"""
@@ -238,7 +322,6 @@ claude mcp add --transport http calculator-server http://localhost:8001/mcp
 # in .claude/settings.json
 # add the server with --scope project
 claude mcp add --transport http --scope project calculator-server http://localhost:8001/mcp
-
 ```
 
 ##### Test the tool in the client
@@ -267,15 +350,78 @@ claude
 Notes:
 
 - In the server is down, Claude Code will show a connection error for that MCP server when we run `/mcp` or try to use its tools, but everything else keeps working normally -- it just won't have access to that server's tools until it's running again. It fails gracefully.
-- Config is saved in `~/.claude/settings.json` (or project-level `.claude/settings.json` if added with `--scope` project).
+- Config is saved in `~/.claude.json` (or project-level `.claude/settings.json` if added with `--scope` project).
 - To uninstall the server tool, we can run `claude mcp remove calculator-server` (or `claude mcp remove --scope project calculator-server` if it was added with `--scope` project).
 
 ```bash
 claude mcp remove calculator-server
 ```
 
+Settings file example (`~/.claude.json`):
+
+```json
+//...
+"mcpServers": {
+  "calculator-server": {
+    "type": "http",
+    "url": "http://localhost:8001/mcp"
+  }
+},
+//...
+```
+
+If we want Claude to automatically start the server (if it's a local server), we can add the MCP as follows:
+
+```bash
+claude mcp add calculator-server uv run /path/to/server.py
+```
+
+The `uv` project must be configured correctly, i.e., the `pyproject.toml` file must have the correct dependencies, e.g.:
+
+```toml
+# ...
+# dependencies = ["mcp", "fastmcp"]
+# ...
+```
+
 ### Example: Leave Management MCP Server
 
+The example setup is very similar.
+
+The main difference is that this server uses a SQLite database to store employee and leave request data,
+and exposes tools to manage leave requests (e.g., create, approve, list requests).
+The server code is in [leave_manager_mcp/server.py](./leave_manager_mcp/server.py).
+
+#### Setup
+
+```bash
+# Create a python project with uv
+mkdir leave_manager_mcp
+uv init leave_manager_mcp  # empty project with main.py, README.md, pyproject.toml
+cd leave_manager_mcp
+uv venv  # if no venv created, create one explicitly
+# Note: we can remove the empty main file main.py or hello.py
+
+# Activate the venv
+source .venv/bin/activate  # macOS / Linux / WSL
+.venv\Scripts\Activate.ps1  # Windows (PowerShell)
+
+# Install the mcp library
+uv add "mcp[cli]"  # Alternatively, without uv: pip install "mcp[cli]"
+# This will update the pyproject.toml file with the mcp dependency
+# and create a uv.lock file with the exact versions of all dependencies.
+
+# Create the server code
+touch server.py
+# Then, add the code below
+```
+
+#### Server Code
+
+File: [leave_manager_mcp/server.py](./leave_manager_mcp/server.py)
+
+```python
+```
 
 
 ### Example: Project Management MCP Server
