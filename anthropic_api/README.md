@@ -27,6 +27,8 @@ Table of contents:
   - [7. Extended Thinking](#7-extended-thinking)
   - [8. Async Client](#8-async-client)
   - [9. Token Counting](#9-token-counting)
+  - [10. Files API](#10-files-api)
+  - [11. Agent SDK](#11-agent-sdk)
   - [Model Reference](#model-reference)
 
 ## Setup
@@ -432,6 +434,230 @@ count = client.messages.count_tokens(
 )
 
 print(f"Estimated input tokens: {count.input_tokens}")
+```
+
+## 10. Files API
+
+The Files API lets you upload files once and reference them by `file_id` across many requests — useful for reusing large PDFs, images, or datasets without re-uploading each time.
+
+> **Note:** The Files API is in beta. Use `betas=["files-api-2025-04-14"]` and call via `client.beta.*`.
+
+### Supported file types
+
+| File type | MIME type | Content block |
+|---|---|---|
+| PDF | `application/pdf` | `document` |
+| Plain text | `text/plain` | `document` |
+| Images | `image/jpeg`, `image/png`, `image/gif`, `image/webp` | `image` |
+
+Limits: 500 MB per file, 500 GB total per organization.
+
+### Upload a file
+
+```python
+from dotenv import load_dotenv
+from anthropic import Anthropic
+
+load_dotenv()
+client = Anthropic()
+
+# Upload a PDF
+with open("report.pdf", "rb") as f:
+    uploaded = client.beta.files.upload(
+        file=("report.pdf", f, "application/pdf"),
+    )
+
+file_id = uploaded.id
+print(f"Uploaded: {file_id}")
+```
+
+### Use a file in a message
+
+Reference the file by `file_id` instead of re-uploading:
+
+```python
+response = client.beta.messages.create(
+    model="claude-haiku-4-5",
+    max_tokens=512,
+    messages=[{
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "Summarize this document."},
+            {
+                "type": "document",
+                "source": {
+                    "type": "file",
+                    "file_id": file_id,
+                },
+            },
+        ],
+    }],
+    betas=["files-api-2025-04-14"],
+)
+print(response.content[0].text)
+```
+
+For images, use `"type": "image"` instead of `"document"`:
+
+```python
+response = client.beta.messages.create(
+    model="claude-haiku-4-5",
+    max_tokens=256,
+    messages=[{
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "What's in this image?"},
+            {
+                "type": "image",
+                "source": {"type": "file", "file_id": image_file_id},
+            },
+        ],
+    }],
+    betas=["files-api-2025-04-14"],
+)
+```
+
+### Manage files
+
+```python
+# List all uploaded files
+files = client.beta.files.list()
+for f in files.data:
+    print(f.id, f.filename)
+
+# Get metadata for a specific file
+meta = client.beta.files.retrieve_metadata(file_id)
+print(meta.filename, meta.size)
+
+# Delete a file
+client.beta.files.delete(file_id)
+```
+
+## 11. Agent SDK
+
+The Anthropic SDK ships beta utilities that simplify building agentic loops: the `@beta_tool` decorator auto-generates JSON schemas from Python function signatures, and `tool_runner()` drives the full tool-calling loop automatically.
+
+### `@beta_tool` decorator
+
+Generates an `input_schema` from the function signature and docstring. No manual JSON schema needed.
+
+```python
+from anthropic import Anthropic, beta_tool
+
+client = Anthropic()
+
+@beta_tool
+def get_weather(city: str, unit: str = "celsius") -> str:
+    """Return the current weather for a city.
+
+    Args:
+        city: The city name.
+        unit: Temperature unit, either 'celsius' or 'fahrenheit'.
+    """
+    # Your real implementation here
+    return f"18°{'C' if unit == 'celsius' else 'F'}, Cloudy in {city}"
+
+@beta_tool
+def add(left: int, right: int) -> str:
+    """Add two integers.
+
+    Args:
+        left: First integer.
+        right: Second integer.
+    """
+    return str(left + right)
+```
+
+### `tool_runner()` — automatic agentic loop
+
+Drives the full tool-calling loop: calls tools, feeds results back to the model, and stops when `stop_reason == "end_turn"`. Yields a `BetaMessage` for each API call made.
+
+```python
+runner = client.beta.messages.tool_runner(
+    model="claude-haiku-4-5",
+    max_tokens=512,
+    tools=[get_weather, add],
+    messages=[{"role": "user", "content": "What's 9 + 10, and what's the weather in Tokyo?"}],
+)
+
+for message in runner:
+    # Each message is one round-trip with the model
+    for block in message.content:
+        if hasattr(block, "text"):
+            print(block.text)
+```
+
+### `ToolError` — rich error feedback
+
+Raise `ToolError` inside a `@beta_tool` to return structured errors (text + images) that the model can reason about.
+
+```python
+from anthropic.lib.tools import ToolError
+
+@beta_tool
+def fetch_url(url: str) -> str:
+    """Fetch the content of a URL.
+
+    Args:
+        url: The URL to fetch.
+    """
+    if not url.startswith("https://"):
+        raise ToolError(f"Only HTTPS URLs are supported. Got: {url}")
+    # ... fetch logic ...
+    return "page content"
+```
+
+### Manual agent loop
+
+For full control, implement the loop yourself. This is equivalent to what `tool_runner()` does internally:
+
+```python
+import json
+from anthropic import Anthropic, beta_tool
+
+load_dotenv()
+client = Anthropic()
+
+@beta_tool
+def add(left: int, right: int) -> str:
+    """Add two integers.
+    Args:
+        left: First integer.
+        right: Second integer.
+    """
+    return str(left + right)
+
+tools = [add]
+messages = [{"role": "user", "content": "What is 42 + 58?"}]
+
+while True:
+    response = client.messages.create(
+        model="claude-haiku-4-5",
+        max_tokens=512,
+        tools=[t.to_dict() for t in tools],
+        messages=messages,
+    )
+
+    messages.append({"role": "assistant", "content": response.content})
+
+    if response.stop_reason == "end_turn":
+        print(response.content[0].text)
+        break
+
+    # Execute all tool calls in this round
+    tool_results = []
+    for block in response.content:
+        if block.type == "tool_use":
+            # Find and call the matching tool
+            tool_fn = next(t for t in tools if t.name == block.name)
+            result = tool_fn(**block.input)
+            tool_results.append({
+                "type": "tool_result",
+                "tool_use_id": block.id,
+                "content": result,
+            })
+
+    messages.append({"role": "user", "content": tool_results})
 ```
 
 ## Model Reference
