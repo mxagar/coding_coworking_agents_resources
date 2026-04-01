@@ -19,7 +19,10 @@ numpy
 onnx
 onnxruntime
 openai
+openai-agents
 pandas
+pdfplumber
+pymupdf
 peft
 pip
 pydantic
