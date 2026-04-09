@@ -13,12 +13,12 @@ Each subdirectory contains a README file with specific information about the res
 
 ## Collection of Other Resources
 
-- [] [GitHub Spec-Kit](https://github.com/github/spec-kit)
-- [] [qdm](https://github.com/tobi/qmd)
-- [] [LLM Wiki (Karpathy)](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
-- [] [Autoresaerch (Karphathy)](https://github.com/karpathy/autoresearch)
-- [] [Worktrunk](https://worktrunk.dev/)
-- [] [Cmux](https://cmux.com/)
+- [ ] [GitHub Spec-Kit](https://github.com/github/spec-kit)
+- [ ] [qdm](https://github.com/tobi/qmd)
+- [ ] [LLM Wiki (Karpathy)](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
+- [ ] [Autoresaerch (Karphathy)](https://github.com/karpathy/autoresearch)
+- [ ] [Worktrunk](https://worktrunk.dev/)
+- [ ] [Cmux](https://cmux.com/)
 
 ## Setup
 
