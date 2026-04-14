@@ -19,6 +19,7 @@ Each subdirectory contains a README file with specific information about the res
 - [ ] [Autoresaerch (Karphathy)](https://github.com/karpathy/autoresearch)
 - [ ] [Worktrunk](https://worktrunk.dev/)
 - [ ] [Cmux](https://cmux.com/)
+- [ ] [Claude Cookbooks](https://github.com/anthropics/claude-cookbooks)
 
 ## Setup
 
