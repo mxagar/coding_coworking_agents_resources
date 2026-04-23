@@ -20,6 +20,8 @@ Each subdirectory contains a README file with specific information about the res
 - [ ] [Worktrunk](https://worktrunk.dev/)
 - [ ] [Cmux](https://cmux.com/)
 - [ ] [Claude Cookbooks](https://github.com/anthropics/claude-cookbooks)
+- [ ] [System Prompts Leaks: Claude Code](https://github.com/asgeirtj/system_prompts_leaks/blob/main/Anthropic/claude-code.md)
+- [ ] [Claude Memory Management](https://github.com/thedotmack/claude-mem): it can be installed via `/plugin`.
 
 ## Setup
 
