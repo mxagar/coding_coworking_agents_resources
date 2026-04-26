@@ -1217,7 +1217,7 @@ Add this to your Codex configuration file (`~/.codex/config.toml` or `.codex/con
 
     [mcp_servers.context7]
     url = "https://mcp.context7.com/mcp"
-    http_headers = { "CONTEXT7_API_KEY" = "YOUR_API_KEY" }  # we don't need the API key, we can remove tihs line
+    http_headers = { "CONTEXT7_API_KEY" = "YOUR_API_KEY" }  # we don't need the API key, we can remove this line
 
 ```
 
