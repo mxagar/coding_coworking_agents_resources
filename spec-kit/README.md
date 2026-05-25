@@ -217,11 +217,30 @@ This creates or updates:
 
 Good constitution rules are specific and enforceable:
 
-- Preferred language, framework, or architecture constraints.
-- Testing expectations.
-- Accessibility, security, or performance requirements.
-- Dependency limits.
-- Review and governance expectations.
+- framework: Next.js, React, Django, FastAPI, Astro, etc.
+- language: TypeScript, Python, Go, etc.
+- styling: Tailwind, CSS modules, shadcn/ui, Bootstrap, etc.
+- database/storage: PostgreSQL, SQLite, local JSON, no database
+- testing (not only libs, but also expectations): Vitest, Playwright, pytest, Jest
+- deployment: Vercel, Docker, static export, GitHub Pages
+- architecture constraints: API routes, server components, monolith, CLI app, etc.
+- accessibility, security, or performance requirements.
+- dependency limits.
+- review and governance expectations.
+
+Example:
+
+```text
+/speckit.constitution This project uses TypeScript, Next.js, Tailwind CSS, and static generation unless a feature explicitly requires otherwise.
+```
+
+If the whole project should follow test-driven development, define that here too:
+
+```text
+/speckit.constitution Require test-driven development for feature work. Each user story must have failing tests or executable checks before implementation. Implementation tasks must not be marked complete until the related tests pass.
+```
+
+This makes TDD a project rule instead of a one-off preference.
 
 Avoid filling the constitution with vague preferences. The agent should be able to use it as a decision filter.
 
@@ -314,6 +333,14 @@ No database is needed; episode data is embedded as mocked content.
 The site is responsive and ready for mobile.
 ```
 
+Define feature-specific testing strategy here too. If TDD applies only to this feature, or if you want a specific test stack, say it in `/speckit.plan`:
+
+```text
+/speckit.plan Use Next.js with static site generation and TypeScript.
+Use Vitest for unit tests and Playwright for end-to-end tests.
+Follow TDD: write failing tests for each user story before implementation, then implement until tests pass.
+```
+
 The agent may generate artifacts such as:
 
 ```text
@@ -330,8 +357,28 @@ Review the plan for:
 - Whether it introduced unnecessary services or dependencies.
 - Whether research is specific enough to help implementation.
 - Whether each major requirement traces back to the spec.
+- Whether the testing strategy is explicit, including test tools and TDD expectations if requested.
 
 If a framework or library is changing quickly, ask the agent to research version-specific details before task generation.
+
+### TDD In Generated Artifacts
+
+When TDD is requested, it should be visible in several places:
+
+| Artifact | What To Look For |
+| --- | --- |
+| `.specify/memory/constitution.md` | Project-wide rule that tests or executable checks come before implementation. |
+| `specs/<feature>/spec.md` | User stories and acceptance criteria that can be tested. |
+| `specs/<feature>/checklists/` | Checklist items confirming requirements are testable and coverage expectations are clear. |
+| `specs/<feature>/plan.md` | Named test tools, test layers, and how tests map to user stories. |
+| `specs/<feature>/tasks.md` | Test tasks listed before implementation tasks for each user story. |
+| Implementation output | Tests are created first, fail for the right reason, then pass after implementation. |
+
+If `tasks.md` puts implementation before tests, ask the agent to revise it:
+
+```text
+Revise tasks.md to follow TDD. For each user story, list the failing test task before the implementation task, and include the command used to run that test.
+```
 
 ### 5. Audit The Plan
 
@@ -594,6 +641,45 @@ Use this pattern for a new feature:
 - Running `/speckit.implement` before reviewing `plan.md` and `tasks.md`.
 - Treating passing CLI output as proof that the product works.
 - Leaving important decisions only in chat instead of updating the artifacts.
+
+## Using Specs After Implementation
+
+The generated spec files are useful because they make the agent workflow traceable, but they are not magic memory that stays correct forever.
+
+During the active Spec Kit workflow, commands usually load the relevant files automatically. After `/speckit.specify` creates a feature branch and a matching directory such as `specs/001-modern-podcast-website/`, follow-up commands infer the active feature from the current branch and use the files in that directory:
+
+```text
+/speckit.clarify
+/speckit.checklist accessibility
+/speckit.plan
+/speckit.tasks
+/speckit.implement
+```
+
+These commands should use the feature's `spec.md`, `plan.md`, `tasks.md`, checklists, and the project constitution as context.
+
+After implementation, the files remain valuable as durable project artifacts:
+
+- Review what the feature was supposed to do.
+- Compare implementation against acceptance criteria.
+- Onboard another developer or coding agent.
+- Debug whether a problem is a code bug or a requirement mismatch.
+- Audit drift between requirements, tests, docs, and behavior.
+- Start follow-up work from a known feature context.
+
+For later work, point the agent at the relevant feature directory:
+
+```text
+Review the current implementation against specs/001-modern-podcast-website/spec.md and specs/001-modern-podcast-website/plan.md. Report any drift before changing code.
+```
+
+If behavior changes after implementation, update the artifacts explicitly:
+
+```text
+The implemented behavior has changed: <describe change>. Update the relevant spec, plan, and tasks so the artifacts match the code.
+```
+
+Treat the specs like versioned design records. Git preserves them, agents can reload them, and humans can review them, but they only stay accurate when requirements and implementation changes are reflected back into the files.
 
 ## Minimal Example
 
